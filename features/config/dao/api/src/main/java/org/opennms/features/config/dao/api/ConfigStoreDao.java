@@ -110,7 +110,7 @@ public interface ConfigStoreDao<CONFIG_DATATYPE> {
      */
     void addConfig(String configName, String configId, JSONObject configObject) throws IOException;
 
-    Optional<CONFIG_DATATYPE> getConfig(String configName, String configId) throws IOException;
+    Optional<CONFIG_DATATYPE> getConfig(String configName, String configId);
 
     /**
      * update config to a registered service name, if the configObject is String / JSONObject, it can be partial data and

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2021 The OpenNMS Group, Inc.
+ * Copyright (C) 2007-2021 The OpenNMS Group, Inc.
  * OpenNMS(R) is Copyright (C) 1999-2021 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
@@ -28,26 +28,37 @@
 
 package org.opennms.features.config.service.util;
 
-import org.opennms.features.config.service.api.ConfigKey;
-import org.opennms.features.config.service.impl.AbstractCmJaxbConfigDao;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-import java.util.function.Consumer;
+import org.json.JSONObject;
 
-/**
- * It is default update notifier for AbstractCmJaxbConfigDao.
- *`
- * @param <ENTITY_CLASS>
- */
-public class DefaultAbstractCmJaxbConfigDaoUpdateCallback<ENTITY_CLASS> implements Consumer<ConfigKey> {
-    private AbstractCmJaxbConfigDao<ENTITY_CLASS> abstractCmJaxbConfigDao;
-
-    public DefaultAbstractCmJaxbConfigDaoUpdateCallback(AbstractCmJaxbConfigDao<ENTITY_CLASS> abstractCmJaxbConfigDao) {
-        this.abstractCmJaxbConfigDao = abstractCmJaxbConfigDao;
+public class PropertiesConversionUtil {
+    // We expect to have a flat json with only simple data types as children.
+    // Returns an immutable map.
+    public static Map<String, String> jsonToMap(JSONObject json) {
+        Map<String, String> map = new HashMap<>();
+        for(String key : json.keySet()) {
+            String value = Optional.of(json.get(key))
+                    .map(o -> JSONObject.NULL.equals(o) ? null : o) // map back to Java null
+                    .map(Object::toString)
+                    .orElse(null);
+            map.put(key, value);
+        }
+        return map;
     }
 
-    @Override
-    public void accept(ConfigKey configUpdateInfo) {
-        // trigger to reload, which will replace the entity in lastKnownEntityMap
-        abstractCmJaxbConfigDao.loadConfig(configUpdateInfo.getConfigId());
+    public static JSONObject propertiesToJson(Map<String,?> map) {
+        JSONObject json = new JSONObject();
+        for(Map.Entry<?,?> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if(value == null) {
+                value = JSONObject.NULL; // otherwise, the entry is removed altogether
+            }
+            json.put(entry.getKey().toString(), value);
+        }
+        return json;
     }
+
 }

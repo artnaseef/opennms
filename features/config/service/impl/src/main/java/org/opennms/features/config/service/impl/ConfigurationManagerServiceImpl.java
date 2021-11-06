@@ -50,7 +50,7 @@ import org.opennms.features.config.dao.api.ConfigDefinition;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.dao.api.ConfigStoreDao;
 import org.opennms.features.config.dao.impl.util.XmlConverter;
-import org.opennms.features.config.service.api.ConfigUpdateInfo;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
 import org.slf4j.Logger;
@@ -62,7 +62,7 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
     private final static Logger LOG = LoggerFactory.getLogger(ConfigurationManagerServiceImpl.class);
     private final ConfigStoreDao<JSONObject> configStoreDao;
     // This map contains key: ConfigUpdateInfo value: list of Consumer
-    private final ConcurrentHashMap<ConfigUpdateInfo, Collection<Consumer<ConfigUpdateInfo>>> onloadNotifyMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ConfigKey, Collection<Consumer<ConfigKey>>> onloadNotifyMap = new ConcurrentHashMap<>();
 
     private final Map<String, ConfigDefinition> configDefinitions = new HashMap<>(); // TODO: Patrick: need to be replaced with proper implementations
 
@@ -161,10 +161,10 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
     }
 
     @Override
-    public void registerReloadConsumer(ConfigUpdateInfo info, Consumer<ConfigUpdateInfo> consumer) {
+    public void registerReloadConsumer(ConfigKey info, Consumer<ConfigKey> consumer) {
         onloadNotifyMap.compute(info, (k, v) -> {
             if (v == null) {
-                ArrayList<Consumer<ConfigUpdateInfo>> consumers = new ArrayList<>();
+                ArrayList<Consumer<ConfigKey>> consumers = new ArrayList<>();
                 consumers.add(consumer);
                 return consumers;
             } else {
@@ -179,7 +179,7 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
      *
      * @param configUpdateInfo
      */
-    private void triggerReloadConsumer(ConfigUpdateInfo configUpdateInfo) {
+    private void triggerReloadConsumer(ConfigKey configUpdateInfo) {
         LOG.debug("Calling onReloaded callbacks");
         onloadNotifyMap.computeIfPresent(configUpdateInfo, (k, v) -> {
             v.forEach(c -> {
@@ -223,13 +223,17 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
 
     @Override
     public void updateConfiguration(String configName, String configId, JsonAsString config) throws IOException {
-        configStoreDao.updateConfig(configName, configId, new JSONObject(config.toString()));
-        ConfigUpdateInfo updateInfo = new ConfigUpdateInfo(configName, configId);
-        this.triggerReloadConsumer(updateInfo);
+        this.updateConfiguration(new ConfigKey(configName, configId), new JSONObject(config.toString()));
     }
 
     @Override
-    public Optional<JSONObject> getJSONConfiguration(final String configName, final String configId) throws IOException {
+    public void updateConfiguration(final ConfigKey configKey, JSONObject config) throws IOException {
+        configStoreDao.updateConfig(configKey.getConfigName(), configKey.getConfigId(),config);
+        this.triggerReloadConsumer(configKey);
+    }
+
+    @Override
+    public Optional<JSONObject> getJSONConfiguration(final String configName, final String configId) {
         return configStoreDao.getConfig(configName, configId);
     }
 

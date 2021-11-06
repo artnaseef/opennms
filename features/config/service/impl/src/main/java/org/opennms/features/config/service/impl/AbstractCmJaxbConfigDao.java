@@ -30,7 +30,7 @@ package org.opennms.features.config.service.impl;
 
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.config.dao.api.ConfigSchema;
-import org.opennms.features.config.service.api.ConfigUpdateInfo;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
 import org.opennms.features.config.service.util.DefaultAbstractCmJaxbConfigDaoUpdateCallback;
@@ -75,7 +75,7 @@ public abstract class AbstractCmJaxbConfigDao<ENTITY_CLASS> {
      *
      * @return Consumer
      */
-    Consumer<ConfigUpdateInfo> getUpdateCallback() {
+    Consumer<ConfigKey> getUpdateCallback() {
         return new DefaultAbstractCmJaxbConfigDaoUpdateCallback<>(this);
     }
 
@@ -225,8 +225,8 @@ public abstract class AbstractCmJaxbConfigDao<ENTITY_CLASS> {
     /**
      * @param callback a callback that will be called when the entity maintained by this DAO is reloaded
      */
-    public void addOnReloadedCallback(String configId, Consumer<ConfigUpdateInfo> callback) {
+    public void addOnReloadedCallback(String configId, Consumer<ConfigKey> callback) {
         Objects.requireNonNull(callback);
-        configurationManagerService.registerReloadConsumer(new ConfigUpdateInfo(this.getConfigName(), configId), callback);
+        configurationManagerService.registerReloadConsumer(new ConfigKey(this.getConfigName(), configId), callback);
     }
 }

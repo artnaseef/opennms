@@ -42,7 +42,7 @@ import org.opennms.features.config.dao.api.ConfigConverter;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.dao.impl.util.XmlConverter;
-import org.opennms.features.config.service.api.ConfigUpdateInfo;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
 import org.opennms.netmgt.config.provisiond.ProvisiondConfiguration;
@@ -146,9 +146,9 @@ public class ConfigurationManagerServiceImplTest {
         Assert.assertEquals("Incorrect importThreads", 12, jsonAfterUpdate.get().get("importThreads"));
     }
 
-    private class TestCallback implements Consumer<ConfigUpdateInfo> {
+    private class TestCallback implements Consumer<ConfigKey> {
         @Override
-        public void accept(ConfigUpdateInfo info) {}
+        public void accept(ConfigKey info) {}
     }
 
     @Test
@@ -156,7 +156,7 @@ public class ConfigurationManagerServiceImplTest {
         TestCallback callback = Mockito.mock(TestCallback.class);
         JSONObject json = configManagerService
                 .getJSONConfiguration(CONFIG_NAME, CONFIG_ID).get();
-        configManagerService.registerReloadConsumer(new ConfigUpdateInfo(CONFIG_NAME, CONFIG_ID), callback);
+        configManagerService.registerReloadConsumer(new ConfigKey(CONFIG_NAME, CONFIG_ID), callback);
         configManagerService.updateConfiguration(CONFIG_NAME, CONFIG_ID, new JsonAsString(json.toString()));
         Mockito.verify(callback, Mockito.atLeastOnce()).accept(Mockito.any());
     }

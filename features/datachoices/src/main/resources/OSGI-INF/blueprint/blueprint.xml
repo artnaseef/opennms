@@ -26,9 +26,12 @@
     <reference id="monitoredServiceDao" interface="org.opennms.netmgt.dao.api.MonitoredServiceDao" availability="mandatory"/>
     <reference id="nodeDao" interface="org.opennms.netmgt.dao.api.NodeDao" availability="mandatory"/>
     <reference id="snmpInterfaceDao" interface="org.opennms.netmgt.dao.api.SnmpInterfaceDao" availability="mandatory"/>
+    <reference id="configurationManagerService" interface="org.opennms.features.config.service.api.ConfigurationManagerService" availability="mandatory"/>
 
     <!-- The state manager will manually pull properties from the configuration file -->
-    <bean id="stateManager" class="org.opennms.features.datachoices.internal.StateManager"/>
+    <bean id="stateManager" class="org.opennms.features.datachoices.internal.StateManager">
+        <argument ref="configurationManagerService" />
+    </bean>
 
 	<bean id="usageStatisticsReporter" class="org.opennms.features.datachoices.internal.UsageStatisticsReporter"
         init-method="init" destroy-method="destroy">

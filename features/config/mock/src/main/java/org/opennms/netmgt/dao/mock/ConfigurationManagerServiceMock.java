@@ -33,8 +33,8 @@ import org.json.JSONObject;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigDefinition;
 import org.opennms.features.config.dao.api.ConfigSchema;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.dao.impl.util.XmlConverter;
-import org.opennms.features.config.service.api.ConfigUpdateInfo;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class ConfigurationManagerServiceMock implements ConfigurationManagerServ
     }
 
     @Override
-    public void registerReloadConsumer(ConfigUpdateInfo info, Consumer<ConfigUpdateInfo> consumer) {
+    public void registerReloadConsumer(ConfigKey info, Consumer<ConfigKey> consumer) {
     }
 
     @Override
@@ -130,7 +130,12 @@ public class ConfigurationManagerServiceMock implements ConfigurationManagerServ
     }
 
     @Override
-    public Optional<JSONObject> getJSONConfiguration(String configName, String configId) throws IOException {
+    public void updateConfiguration(ConfigKey configKey, JSONObject configObject) throws IOException {
+
+    }
+
+    @Override
+    public Optional<JSONObject> getJSONConfiguration(String configName, String configId) {
         return Optional.empty();
     }
 

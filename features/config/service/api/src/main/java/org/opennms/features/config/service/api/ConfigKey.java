@@ -30,7 +30,7 @@ package org.opennms.features.config.service.api;
 
 import java.util.Objects;
 
-public class ConfigUpdateInfo {
+public class ConfigKey {
     private String configName;
     private String configId;
 
@@ -39,7 +39,7 @@ public class ConfigUpdateInfo {
      * @param configName
      * @param configId
      */
-     public ConfigUpdateInfo(String configName, String configId) {
+     public ConfigKey(String configName, String configId) {
         this.configName = Objects.requireNonNull(configName);
         this.configId = Objects.requireNonNull(configId);
     }
@@ -59,10 +59,10 @@ public class ConfigUpdateInfo {
 
     @Override
     public boolean equals(final Object obj) {
-        if (!(obj instanceof ConfigUpdateInfo)) {
+        if (!(obj instanceof ConfigKey)) {
             return false;
         }
-        return ((ConfigUpdateInfo) obj).getConfigName().equals(this.getConfigName())
-                && ((ConfigUpdateInfo) obj).getConfigId().equals(this.getConfigId());
+        return ((ConfigKey) obj).getConfigName().equals(this.getConfigName())
+                && ((ConfigKey) obj).getConfigId().equals(this.getConfigId());
     }
 }

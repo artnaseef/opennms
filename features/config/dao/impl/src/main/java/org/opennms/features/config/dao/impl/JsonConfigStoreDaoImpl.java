@@ -151,13 +151,17 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
     }
 
     @Override
-    public Optional<ConfigData<JSONObject>> getConfigData(final String configName) throws IOException {
+    public Optional<ConfigData<JSONObject>> getConfigData(final String configName)  {
         Optional<String> configDataJsonStr = jsonStore.get(configName, CONTEXT_CONFIG);
         if (configDataJsonStr.isEmpty()) {
             return Optional.empty();
         }
         JavaType type = mapper.getTypeFactory().constructParametricType(ConfigData.class, JSONObject.class);
-        return Optional.of(mapper.readValue(configDataJsonStr.get(), type));
+        try {
+            return Optional.of(mapper.readValue(configDataJsonStr.get(), type));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e); // this shouldn't happen: assumption: we have only valid data in cm
+        }
     }
 
     @Override
@@ -186,7 +190,7 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
     }
 
     @Override
-    public Optional<JSONObject> getConfig(String configName, String configId) throws IOException {
+    public Optional<JSONObject> getConfig(String configName, String configId) {
         Optional<ConfigData<JSONObject>> configData = this.getConfigData(configName);
         if (configData.isEmpty()) {
             return Optional.empty();

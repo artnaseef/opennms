@@ -78,7 +78,7 @@ public interface ConfigurationManagerService {
 
     Optional<ConfigDefinition> getRegisteredConfigDefinition(String configName);
 
-    void registerReloadConsumer(ConfigUpdateInfo info, Consumer<ConfigUpdateInfo> consumer);
+    void registerReloadConsumer(ConfigKey info, Consumer<ConfigKey> consumer);
 
     /**
      * register a new configuration by config object.
@@ -102,6 +102,8 @@ public interface ConfigurationManagerService {
     void updateConfiguration(String configName, String configId,
                              JsonAsString configObject) throws IOException, IllegalArgumentException;
 
+    void updateConfiguration(final ConfigKey configKey, JSONObject config) throws IOException, IllegalArgumentException;
+
     /**
      * get config as json by configName, configId
      *
@@ -110,7 +112,7 @@ public interface ConfigurationManagerService {
      * @return JSONObject
      * @throws IOException
      */
-    Optional<JSONObject> getJSONConfiguration(String configName, String configId) throws IOException;
+    Optional<JSONObject> getJSONConfiguration(String configName, String configId);
 
     /**
      * Use for osgi API

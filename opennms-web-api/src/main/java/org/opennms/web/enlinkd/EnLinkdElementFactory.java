@@ -95,6 +95,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.google.common.collect.Lists;
+
 @Transactional(readOnly = true)
 public class EnLinkdElementFactory implements InitializingBean,
         EnLinkdElementFactoryInterface {
@@ -669,7 +671,16 @@ public class EnLinkdElementFactory implements InitializingBean,
                         bridgePortSet.stream()
                                 .map(bridgePort -> "("+bridgePort.getNodeId() +","+bridgePort.getBridgePortIfIndex()+")")
                                 .collect(Collectors.joining(",")) +")");
-               snmpInterfaceMap = m_snmpInterfaceDao.findMatching(snmpInterfaceBuilder.toCriteria()).stream().collect(Collectors.toMap(snmpInterface -> Pair.of(snmpInterface.getNodeId(), snmpInterface.getIfIndex()), Function.identity()));
+
+                snmpInterfaceMap = m_snmpInterfaceDao.findMatching(snmpInterfaceBuilder.toCriteria()).stream()
+                        .collect(Collectors.toMap(snmpInterface -> Pair.of(snmpInterface.getNodeId(), snmpInterface.getIfIndex()), snmpInterface -> Lists.newArrayList(snmpInterface), (a, b) -> {
+                            a.addAll(b);
+                            return a;
+                        }))
+                        .entrySet()
+                        .stream()
+                        .filter(e -> e.getValue().size() == 1)
+                        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().get(0)));
             } else {
                 snmpInterfaceMap = Collections.emptyMap();
             }

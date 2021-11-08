@@ -21,7 +21,6 @@ const getNodes = async (context: VuexContext, queryParameters?: QueryParameters)
 }
 
 const getAlarms = async (context: VuexContext, queryParameters?: QueryParameters) => {
-    console.log("I'm in get alarms")
     const resp = await API.getAlarms(queryParameters)
     if (resp) {
         context.commit("SAVE_ALARMS_TO_STATE", resp.alarm)

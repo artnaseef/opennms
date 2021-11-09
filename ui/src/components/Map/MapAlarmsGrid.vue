@@ -3,18 +3,19 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
-        <select
-          name="alarmOptions"
-          id="alarmOptions"
-          v-model="currentAlarmOption"
-          :disabled="!hasAlarmSelected"
-        >
-          <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
-        </select>
-        <button type="button" :disabled="!hasAlarmSelected" @click="submit()">Submit</button>
-        <button @click="clearFilters()">Clear Filters</button>
-        <button @click="applyFilters()">Apply filter</button>
-        <button @click="reset()">Reset</button>
+        <section>
+          <FeatherSelect
+            class="my-select"
+            label="Alarm Action"
+            :options="alarmOptions"
+            v-model="currentAlarmOption"
+            :disabled="!hasAlarmSelected"
+          ></FeatherSelect>
+        </section>
+        <feather-button primary :disabled="!hasAlarmSelected" @click="submit()">Submit</feather-button>
+        <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
+        <feather-button primary @click="applyFilters()">Apply filter</feather-button>
+        <feather-button primary @click="reset()">Reset</feather-button>
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -42,6 +43,8 @@ import { useStore } from "vuex";
 import { computed, watch } from 'vue'
 import { Alarm, Node, AlarmQueryParameters } from "@/types";
 import SeverityFloatingFilter from "./SeverityFloatingFilter.vue"
+import { FeatherSelect } from "@featherds/select";
+import { FeatherButton } from "@featherds/button";
 
 const store = useStore();
 
@@ -64,11 +67,16 @@ let gridColumnApi = ref({});
 function onGridReady(params: any) {
   gridApi = params.api
   gridColumnApi = params.columnApi;
-  sizeToFit()
+  // sizeToFit()
+  autoSizeAll(false);
 }
 
-function sizeToFit() {
-  gridApi.sizeColumnsToFit();
+function autoSizeAll(skipHeader: boolean) {
+  var allColumnIds: string[] = [];
+  gridColumnApi.getAllColumns().forEach(function (column) {
+    allColumnIds.push(column.colId);
+  });
+  gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
 }
 
 watch(
@@ -93,7 +101,7 @@ function getAlarmsFromSelectedNodes() {
   }));
 }
 
-let alarmOptions = ref(["Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+const alarmOptions = ref(["Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
 let currentAlarmOption = ref(alarmOptions.value[0]);
 
@@ -152,7 +160,7 @@ function submit() {
     setTimeout(() => {
       GStore.flashMessage = ''
       window.location.reload()
-    }, 4000)  
+    }, 4000)
   })
 }
 
@@ -275,7 +283,7 @@ const columnDefs = ref([
             }
         </style> ${data.value}`;
       return newData;
-      }
+    }
   },
 ]
 )
@@ -310,5 +318,8 @@ const columnDefs = ref([
 button {
   margin-left: 4px;
   margin-right: 6px;
+}
+.my-select {
+  width: 150px;
 }
 </style>

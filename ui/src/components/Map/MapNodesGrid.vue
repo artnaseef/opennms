@@ -2,9 +2,9 @@
   <div class="mapnodes">
     <div class="button-group">
       <span class="buttons">
-        <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="confirmFilters()">Apply filter</button>
-        <button v-on:click="reset()">Reset</button>
+        <feather-button primary v-on:click="clearFilters()">Clear Filters</feather-button>
+        <feather-button primary v-on:click="confirmFilters()">Apply filter</feather-button>
+        <feather-button primary v-on:click="reset()">Reset</feather-button>
       </span>
     </div>
     <div class="map-nodes-grid">
@@ -31,6 +31,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import { useStore } from "vuex";
 import { computed, watch } from 'vue'
 import { Coordinates } from "@/types";
+import { FeatherButton } from "@featherds/button";
 
 const store = useStore();
 
@@ -122,6 +123,7 @@ const columnDefs = ref([
     headerName: "ID",
     field: "id",
     headerTooltip: "ID",
+    width: 100,
     filter: "agNumberColumnFilter",
     comparator: (valueA: number, valueB: number) => {
       return valueA - valueB;
@@ -192,7 +194,7 @@ const columnDefs = ref([
 <style scoped>
 .button-group {
   width: 100%;
-  height: 25px;
+  height: 100px;
 }
 .map-nodes-grid {
   width: 100%;
@@ -200,8 +202,5 @@ const columnDefs = ref([
 }
 .buttons {
   float: right;
-}
-button {
-  margin-right: 5px;
 }
 </style>

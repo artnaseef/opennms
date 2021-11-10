@@ -1,7 +1,7 @@
 <template>
   <div class="feather-row">
     <div class="feather-col-12">
-      <splitpanes class="default-theme" horizontal style="height: 1000px">
+      <splitpanes class="default-theme" horizontal style="height: 1350px">
         <pane min-size="1" max-size="60">
           <div class="leaflet-map">
             <LeafletMap />

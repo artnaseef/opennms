@@ -194,7 +194,7 @@ const columnDefs = ref([
 <style scoped>
 .button-group {
   width: 100%;
-  height: 100px;
+  height: 40px;
 }
 .map-nodes-grid {
   width: 100%;
@@ -202,5 +202,14 @@ const columnDefs = ref([
 }
 .buttons {
   float: right;
+}
+.btn {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+}
+.btn-primary {
+  margin-left: 10px
+
 }
 </style>

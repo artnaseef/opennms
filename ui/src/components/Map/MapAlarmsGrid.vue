@@ -8,11 +8,11 @@
             class="my-select"
             label="Alarm Action"
             :options="alarmOptions"
-            v-model="currentAlarmOption"
+            v-model="alarmOption"
             :disabled="!hasAlarmSelected"
           ></FeatherSelect>
         </section>
-        <feather-button primary :disabled="!hasAlarmSelected" @click="submit()">Submit</feather-button>
+        <!-- <feather-button primary :disabled="!hasAlarmSelected" @click="submit()">Submit</feather-button> -->
         <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
         <feather-button primary @click="applyFilters()">Apply filter</feather-button>
         <feather-button primary @click="reset()">Reset</feather-button>
@@ -101,9 +101,62 @@ function getAlarmsFromSelectedNodes() {
   }));
 }
 
-const alarmOptions = ref(["Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
-let currentAlarmOption = ref(alarmOptions.value[0]);
+let alarmOption = ref(alarmOptions.value[0]);
+
+watch(
+  () => [alarmOption.value],
+  (newValue, oldValue) => {
+    console.log("alarmOption changed from " + oldValue + " to " + newValue);
+    let alarmQueryParameters: AlarmQueryParameters;
+    switch (alarmOption.value) {
+      case alarmOptions.value[0]:
+        break;
+      case alarmOptions.value[1]: { // "Acknowledge"
+        alarmQueryParameters = { ack: true };
+        break;
+      }
+      case alarmOptions.value[2]: { // "Unacknowledge"
+        alarmQueryParameters = { ack: false };
+        break;
+      }
+      case alarmOptions.value[3]: { // "Escalate"
+        alarmQueryParameters = { escalate: true };
+        break;
+      }
+      case alarmOptions.value[4]: { // "Clear"
+        alarmQueryParameters = { clear: true };
+        break;
+      }
+      default:
+        console.log("No such alarm option exists: " + alarmOption.value);
+        break;
+    }
+
+    let numFail = 0;
+    let respCollection = [];
+    selectedAlarmIds.forEach((alarmId: string) => {
+      let resp = store.dispatch("mapModule/modifyAlarm", {
+        pathVariable: alarmId, queryParameters: alarmQueryParameters
+      })
+      respCollection.push(resp)
+    })
+    Promise.all(respCollection).then(function (result) {
+      result.forEach(r => {
+        if (r === false) {
+          numFail = numFail + 1;
+        }
+      })
+      GStore.flashMessage = (selectedAlarmIds.length - numFail) + " success, " + numFail + ' failed.'
+
+      setTimeout(() => {
+        GStore.flashMessage = ''
+        window.location.reload()
+      }, 4000)
+    })
+  }
+)
 
 const GStore = inject('GStore');
 
@@ -115,53 +168,6 @@ function onSelectionChanged() {
   let selectedRows = gridApi.getSelectedNodes().map(node => node.data);
   selectedAlarmIds = selectedRows.map(alarm => alarm.id);
   hasAlarmSelected.value = selectedAlarmIds.length > 0;
-}
-
-function submit() {
-  let alarmQueryParameters: AlarmQueryParameters;
-  switch (currentAlarmOption.value) {
-    case alarmOptions.value[0]: { // "Acknowledge"
-      alarmQueryParameters = { ack: true };
-      break;
-    }
-    case alarmOptions.value[1]: { // "Unacknowledge"
-      alarmQueryParameters = { ack: false };
-      break;
-    }
-    case alarmOptions.value[2]: { // "Escalate"
-      alarmQueryParameters = { escalate: true };
-      break;
-    }
-    case alarmOptions.value[3]: { // "Clear"
-      alarmQueryParameters = { clear: true };
-      break;
-    }
-    default:
-      console.log("No such alarm option exists: " + currentAlarmOption.value);
-      break;
-  }
-
-  let numFail = 0;
-  let respCollection = [];
-  selectedAlarmIds.forEach((alarmId: string) => {
-    let resp = store.dispatch("mapModule/modifyAlarm", {
-      pathVariable: alarmId, queryParameters: alarmQueryParameters
-    })
-    respCollection.push(resp)
-  })
-  Promise.all(respCollection).then(function (result) {
-    result.forEach(r => {
-      if (r === false) {
-        numFail = numFail + 1;
-      }
-    })
-    GStore.flashMessage = (selectedAlarmIds.length - numFail) + " success, " + numFail + ' failed.'
-
-    setTimeout(() => {
-      GStore.flashMessage = ''
-      window.location.reload()
-    }, 4000)
-  })
 }
 
 function clearFilters() {
@@ -253,6 +259,7 @@ const columnDefs = ref([
     headerName: "COUNT",
     field: "count",
     width: 50,
+    filter: "agNumberColumnFilter",
     headerTooltip: "Count",
     comparator: (valueA: number, valueB: number) => {
       return valueA - valueB;
@@ -292,7 +299,7 @@ const columnDefs = ref([
 <style scoped>
 @keyframes bluefade {
   from {
-    background: rgb(104, 150, 236);
+    background: var(--feather-primary);
   }
   to {
     background: transparent;
@@ -306,7 +313,7 @@ const columnDefs = ref([
 }
 .button-group {
   width: 100%;
-  height: 25px;
+  height: 180px;
 }
 .map-alarms-grid {
   width: 100%;
@@ -318,6 +325,11 @@ const columnDefs = ref([
 button {
   margin-left: 4px;
   margin-right: 6px;
+}
+.btn {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-right: 10px;
 }
 .my-select {
   width: 150px;

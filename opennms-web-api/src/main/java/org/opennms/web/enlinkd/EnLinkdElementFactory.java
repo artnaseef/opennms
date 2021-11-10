@@ -37,6 +37,8 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.FlushMode;
+import org.hibernate.SessionFactory;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.restrictions.EqRestriction;
@@ -143,6 +145,9 @@ public class EnLinkdElementFactory implements InitializingBean,
     private PlatformTransactionManager m_transactionManager;
 
     @Autowired
+    private SessionFactory m_sessionFactory;
+
+    @Autowired
     private IsIsElementDao m_isisElementDao;
 
     @Autowired
@@ -165,6 +170,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public OspfElementNode getOspfElement(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         return convertFromModel(m_ospfElementDao.findByNodeId(Integer.valueOf(nodeId)));
     }
 
@@ -185,6 +192,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public List<OspfLinkNode> getOspfLinks(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<OspfLinkNode> nodelinks = new ArrayList<OspfLinkNode>();
         for (OspfLink link : m_ospfLinkDao.findByNodeId(Integer.valueOf(nodeId))) {
             nodelinks.add(convertFromModel(nodeId, link));
@@ -241,7 +250,7 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public OspfLinkNode convertFromModel(int nodeid, OspfLink link) {
         OspfLinkNode linknode = create(nodeid, link);
 
@@ -306,6 +315,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public CdpElementNode getCdpElement(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         return convertFromModel(m_cdpElementDao.findByNodeId(Integer.valueOf(nodeId)));
     }
 
@@ -332,6 +343,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public List<CdpLinkNode> getCdpLinks(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<CdpLinkNode> nodelinks = new ArrayList<CdpLinkNode>();
         for (CdpLink link : m_cdpLinkDao.findByNodeId(Integer.valueOf(nodeId))) {
             nodelinks.add(convertFromModel(nodeId, link));
@@ -366,7 +379,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return linknode;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public CdpLinkNode convertFromModel(int nodeid, CdpLink link) {
         CdpLinkNode linknode = create(nodeid, link);
         linknode.setCdpCacheDevice(link.getCdpCacheDeviceId());
@@ -395,6 +408,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public LldpElementNode getLldpElement(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         return convertFromModel(m_lldpElementDao.findByNodeId(Integer.valueOf(nodeId)));
     }
 
@@ -418,6 +433,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public List<LldpLinkNode> getLldpLinks(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<LldpLinkNode> nodelinks = new ArrayList<LldpLinkNode>();
         for (LldpLink link : m_lldpLinkDao.findByNodeId(Integer.valueOf(nodeId))) {
             nodelinks.add(convertFromModel(nodeId, link));
@@ -441,7 +458,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return linknode;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private LldpLinkNode convertFromModel(int nodeid, LldpLink link) {
         LldpLinkNode linknode = create(nodeid, link);
 
@@ -492,6 +509,8 @@ public class EnLinkdElementFactory implements InitializingBean,
     }
 
     public IsisElementNode getIsisElement(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         return convertFromModel(m_isisElementDao.findByNodeId(Integer.valueOf(nodeId)));
     }
 
@@ -510,6 +529,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public List<IsisLinkNode> getIsisLinks(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<IsisLinkNode> nodelinks = new ArrayList<IsisLinkNode>();
         for (IsIsLink link : m_isisLinkDao.findByNodeId(Integer.valueOf(nodeId))) {
             nodelinks.add(convertFromModel(nodeId, link));
@@ -518,7 +539,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return nodelinks;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private IsisLinkNode convertFromModel(int nodeid, IsIsLink link) {
         IsisLinkNode linknode = new IsisLinkNode();
         linknode.setIsisCircIfIndex(link.getIsisCircIfIndex());
@@ -571,6 +592,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public List<BridgeElementNode> getBridgeElements(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<BridgeElementNode> nodes = new ArrayList<BridgeElementNode>();
         for (BridgeElement bridge : m_bridgeElementDao.findByNodeId(Integer.valueOf(nodeId))) {
             nodes.add(convertFromModel(bridge));
@@ -604,7 +627,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return bridgeNode;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private BridgeLinkNode convertFromModel(Integer nodeid, SharedSegment segment, BridgePort bridgePort, OnmsSnmpInterface iface) {
 
         final BridgeLinkNode linknode = new BridgeLinkNode();
@@ -623,7 +646,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return addBridgeRemotesNodes(nodeid, null, linknode, segment);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private BridgeLinkNode convertFromModel(Integer nodeid, String mac, List<OnmsIpInterface> ipaddrs, SharedSegment segment) {
         BridgeLinkNode linknode = new BridgeLinkNode();
 
@@ -648,7 +671,7 @@ public class EnLinkdElementFactory implements InitializingBean,
         return addBridgeRemotesNodes(nodeid, mac, linknode, segment);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private BridgeLinkNode addBridgeRemotesNodes(Integer nodeid, String mac, BridgeLinkNode linknode,
             SharedSegment segment) {
 
@@ -811,6 +834,8 @@ public class EnLinkdElementFactory implements InitializingBean,
 
     @Override
     public Collection<BridgeLinkNode> getBridgeLinks(int nodeId) {
+        m_sessionFactory.getCurrentSession().setFlushMode(FlushMode.NEVER);
+
         List<BridgeLinkNode> bridgelinks = new ArrayList<BridgeLinkNode>();
 
         final List<SharedSegment> segments = m_bridgeTopologyService.getSharedSegments(nodeId);

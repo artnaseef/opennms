@@ -3,7 +3,7 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
-                <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
+        <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
         <feather-button primary @click="applyFilters()">Filter Map</feather-button>
         <feather-button primary @click="reset()">Reset</feather-button>
         <section>
@@ -13,13 +13,8 @@
             :options="alarmOptions"
             v-model="alarmOption"
             :disabled="!hasAlarmSelected"
-          >
-            <template v-slot:pre>
-              <FeatherIcon :icon="Options" />
-            </template>
-          </FeatherSelect>
+          ></FeatherSelect>
         </section>
-
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -49,8 +44,6 @@ import { Alarm, Node, AlarmQueryParameters } from "@/types";
 import SeverityFloatingFilter from "./SeverityFloatingFilter.vue"
 import { FeatherSelect } from "@featherds/select";
 import { FeatherButton } from "@featherds/button";
-import { FeatherIcon } from "@featherds/icon";
-import Options from "@featherds/icon/actions/Options";
 
 const store = useStore();
 
@@ -106,8 +99,14 @@ function getAlarmsFromSelectedNodes() {
     logMessage: alarm.logMessage,
   }));
 }
+const alarmOptions = ref([
+  {
+    id: 1,
+    name: "Rik",
+  },
+]);
 
-const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+// const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
 let alarmOption = ref(alarmOptions.value[0]);
 
@@ -302,7 +301,7 @@ const columnDefs = ref([
 )
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 @keyframes bluefade {
   from {
     background: var(--feather-primary);

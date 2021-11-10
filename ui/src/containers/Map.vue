@@ -1,8 +1,8 @@
 <template>
   <div class="feather-row">
     <div class="feather-col-12">
-      <splitpanes class="default-theme" horizontal style="height: 1350px">
-        <pane min-size="1" max-size="60">
+      <splitpanes class="default-theme" horizontal style="height: 1200px">
+        <pane min-size="1" max-size="49">
           <div class="leaflet-map">
             <LeafletMap />
           </div>
@@ -23,7 +23,7 @@ import "splitpanes/dist/splitpanes.css";
 import LeafletMap from "../components/Map/LeafletMap.vue";
 
 import { useStore } from "vuex";
-import { computed, watch } from 'vue'
+import { computed} from 'vue';
 
 const store = useStore();
 
@@ -48,7 +48,7 @@ store.dispatch("mapModule/getAlarms", {
 store.dispatch("mapModule/getNodesGraphEdges");
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #map-pane-under {
   text-align: left;
 }

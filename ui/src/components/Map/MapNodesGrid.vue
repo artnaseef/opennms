@@ -3,7 +3,7 @@
     <div class="button-group">
       <span class="buttons">
         <feather-button primary v-on:click="clearFilters()">Clear Filters</feather-button>
-        <feather-button primary v-on:click="confirmFilters()">Apply filter</feather-button>
+        <feather-button primary v-on:click="confirmFilters()">Filter Map</feather-button>
         <feather-button primary v-on:click="reset()">Reset</feather-button>
       </span>
     </div>
@@ -191,7 +191,7 @@ const columnDefs = ref([
   },
 ]);
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .button-group {
   width: 100%;
   height: 40px;

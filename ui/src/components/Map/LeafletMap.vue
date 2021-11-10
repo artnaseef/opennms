@@ -32,7 +32,7 @@ import { Vue } from "vue-class-component";
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .geo-map {
   height: 80vh;
 }

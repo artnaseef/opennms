@@ -245,6 +245,7 @@ const columnDefs = ref([
     headerName: "COUNT",
     field: "count",
     width: 50,
+    filter: "agNumberColumnFilter",
     headerTooltip: "Count",
     comparator: (valueA: number, valueB: number) => {
       return valueA - valueB;

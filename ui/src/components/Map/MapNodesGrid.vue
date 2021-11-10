@@ -151,9 +151,9 @@ const columnDefs = ref([
     headerTooltip: "Label Source",
   },
   {
-    headerName: "LAST CAPABILITIES SCAN",
-    field: "lastCapabilitiesScan",
-    headerTooltip: "Last Capabilities Scan",
+    headerName: "LATEST NODE SCAN",
+    field: "latestNodeScan",
+    headerTooltip: "Latest Nodes Scan",
     filter: "agDateColumnFilter",
     cellRenderer: (data) => {
       return data.value ? new Date(data.value).toLocaleDateString() : "";

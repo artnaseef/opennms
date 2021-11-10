@@ -3,6 +3,9 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
+                <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
+        <feather-button primary @click="applyFilters()">Filter Map</feather-button>
+        <feather-button primary @click="reset()">Reset</feather-button>
         <section>
           <FeatherSelect
             class="my-select"
@@ -10,12 +13,13 @@
             :options="alarmOptions"
             v-model="alarmOption"
             :disabled="!hasAlarmSelected"
-          ></FeatherSelect>
+          >
+            <template v-slot:pre>
+              <FeatherIcon :icon="Options" />
+            </template>
+          </FeatherSelect>
         </section>
-        <!-- <feather-button primary :disabled="!hasAlarmSelected" @click="submit()">Submit</feather-button> -->
-        <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
-        <feather-button primary @click="applyFilters()">Apply filter</feather-button>
-        <feather-button primary @click="reset()">Reset</feather-button>
+
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -45,6 +49,8 @@ import { Alarm, Node, AlarmQueryParameters } from "@/types";
 import SeverityFloatingFilter from "./SeverityFloatingFilter.vue"
 import { FeatherSelect } from "@featherds/select";
 import { FeatherButton } from "@featherds/button";
+import { FeatherIcon } from "@featherds/icon";
+import Options from "@featherds/icon/actions/Options";
 
 const store = useStore();
 
@@ -313,7 +319,7 @@ const columnDefs = ref([
 }
 .button-group {
   width: 100%;
-  height: 180px;
+  height: 130px;
 }
 .map-alarms-grid {
   width: 100%;
@@ -332,6 +338,6 @@ button {
   margin-right: 10px;
 }
 .my-select {
-  width: 150px;
+  width: 200px;
 }
 </style>

@@ -769,7 +769,12 @@ public class EnLinkdElementFactory implements InitializingBean,
                             .map(sharedmac -> "('" + sharedmac + "')")
                             .collect(Collectors.joining(",")) +")");
 
-            snmpInterfaceMacMap = m_snmpInterfaceDao.findMatching(snmpInterfaceMacBuilder.toCriteria()).stream().collect(Collectors.toMap(snmpInterface -> snmpInterface.getPhysAddr(), Function.identity()));
+            snmpInterfaceMacMap = m_snmpInterfaceDao.findMatching(snmpInterfaceMacBuilder.toCriteria()).stream()
+                    .collect(Collectors.toMap(snmpInterface -> snmpInterface.getPhysAddr(), snmpInteface -> Lists.newArrayList(snmpInteface), (a, b) -> {
+                        a.addAll(b);
+                        return b;
+                    })).entrySet().stream().filter(e -> e.getValue().size() == 1)
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().get(0)));
         } else {
             snmpInterfaceMacMap = new TreeMap<>();
         }

@@ -2,7 +2,7 @@
  * This file is part of OpenNMS(R).
  *
  * Copyright (C) 2021 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2021 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 2021-2021 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,41 +26,32 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.features.config.service.api;
+package org.opennms.features.config.osgi;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Objects;
+import java.util.Properties;
 
 import org.json.JSONObject;
 
-import com.google.common.base.Objects;
-
-/**
- * Ideally we would use JSONObject instead. BUT: we can't make Osgi and Spring to load only once. We run into
- * classloader problems when calling ConfigurationManagerService from Osgi. This is a workaround to still be type safe.
- * */
-public class JsonAsString {
-    private final String json;
-    public JsonAsString (final String json) {
-        this.json = json;
+public class DictionaryUtil {
+    public static Dictionary createFromJson(JSONObject json) {
+        Objects.requireNonNull(json);
+        Properties props = new Properties();
+        props.putAll(json.toMap());
+        return props;
     }
 
-    public JsonAsString (final JSONObject json) {
-        this.json = json.toString();
-    }
-
-    @Override
-    public String toString() {
+    public static JSONObject writeToJson(final Dictionary dictionary) {
+        Objects.requireNonNull(dictionary);
+        JSONObject json = new JSONObject();
+        Enumeration keys = dictionary.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = dictionary.get(key);
+            json.put(key.toString(), value);
+        }
         return json;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        JsonAsString that = (JsonAsString) o;
-        return Objects.equal(json, that.json);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(json);
     }
 }

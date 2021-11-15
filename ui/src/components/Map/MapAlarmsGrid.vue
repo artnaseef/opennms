@@ -19,7 +19,7 @@
     </div>
     <div class="map-alarms-grid">
       <ag-grid-vue
-        style="width: 100%; height: 600px"
+        style="width: 100%; height: 700px"
         class="ag-theme-alpine"
         rowSelection="multiple"
         @grid-ready="onGridReady"

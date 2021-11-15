@@ -138,6 +138,6 @@ const tileProviders = [
 
 <style scoped>
 .geo-map {
-  height: 80vh;
+  height: 70vh;
 }
 </style>

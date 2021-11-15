@@ -37,7 +37,7 @@ export interface EventApiResponse extends ApiResponse {
   event: Event[]
 }
 export interface AlarmApiResponse extends ApiResponse {
-  node: Alarm[]
+  alarm: Alarm[]
 }
 export interface GraphNodesApiResponse {
   vertices: Vertice[]

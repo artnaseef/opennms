@@ -30,18 +30,18 @@ export default {
             onSelectionChanged() {
                   if (this.currentValue === '') {
                         // clear the filter
-                        this.params.parentFilterInstance(instance => {
+                        this.params.parentFilterInstance((instance: any) => {
                               instance.onFloatingFilterChanged(null, null);
                         });
                         return;
                   }
 
-                  this.params.parentFilterInstance(instance => {
+                  this.params.parentFilterInstance((instance: any) => {
                         instance.onFloatingFilterChanged('contains', this.currentValue);
                   });
             },
 
-            onParentModelChanged(parentModel) {
+            onParentModelChanged(parentModel: any) {
                   // When the filter is empty we will receive a null value here
                   if (!parentModel) {
                         this.currentValue = '';

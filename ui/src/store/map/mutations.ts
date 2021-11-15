@@ -9,7 +9,7 @@ const SAVE_ALARMS_TO_STATE = (state: State, alarms: Alarm[]) => {
     state.alarms = [...alarms]
 }
 
-const SAVE_INTERESTED_NODES_ID = (state: State, ids: number[]) => {
+const SAVE_INTERESTED_NODES_ID = (state: State, ids: string[]) => {
     state.interestedNodesID = [...ids]
 }
 

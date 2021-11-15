@@ -59,9 +59,9 @@ let alarms = computed(() => {
 
 let rowData = ref(getAlarmsFromSelectedNodes());
 
-let gridApi = ref({});
+let gridApi: any = ref({});
 
-let gridColumnApi = ref({});
+let gridColumnApi: any = ref({});
 
 function onGridReady(params: any) {
   gridApi = params.api
@@ -72,7 +72,7 @@ function onGridReady(params: any) {
 
 function autoSizeAll(skipHeader: boolean) {
   var allColumnIds: string[] = [];
-  gridColumnApi.getAllColumns().forEach(function (column) {
+  gridColumnApi.getAllColumns().forEach(function (column: any) {
     allColumnIds.push(column.colId);
   });
   gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
@@ -140,7 +140,7 @@ watch(
     }
 
     let numFail = 0;
-    let respCollection = [];
+    let respCollection: any = [];
     selectedAlarmIds.forEach((alarmId: string) => {
       let resp = store.dispatch("mapModule/modifyAlarm", {
         pathVariable: alarmId, queryParameters: alarmQueryParameters
@@ -163,15 +163,15 @@ watch(
   }
 )
 
-const GStore = inject('GStore');
+const GStore: any = inject('GStore');
 
-let selectedAlarmIds = ref([]);
+let selectedAlarmIds:any = ref([]);
 
-let hasAlarmSelected = ref(false);
+let hasAlarmSelected:any = ref(false);
 
 function onSelectionChanged() {
-  let selectedRows = gridApi.getSelectedNodes().map(node => node.data);
-  selectedAlarmIds = selectedRows.map(alarm => alarm.id);
+  let selectedRows = gridApi.getSelectedNodes().map((node: any) => node.data);
+  selectedAlarmIds = selectedRows.map((alarm: any)=> alarm.id);
   hasAlarmSelected.value = selectedAlarmIds.length > 0;
 }
 
@@ -230,7 +230,7 @@ const columnDefs = ref([
       suppressFilterButton: true,
     },
     filterParams: {
-      textCustomComparator: (filter, value, filterText) => {
+      textCustomComparator: (filter:string, value: any, filterText: any) => {
         const filterTextUpperCase = filterText.toUpperCase();
         const valueUpperCase = value.toString().toUpperCase();
         enum ALARM_SEVERITY {

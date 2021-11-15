@@ -30,7 +30,7 @@ import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import { useStore } from "vuex";
 import { computed, watch } from 'vue'
-import { Coordinates } from "@/types";
+import { Coordinates, Node } from "@/types";
 import { FeatherButton } from "@featherds/button";
 
 const store = useStore();
@@ -69,8 +69,8 @@ function getGridRowDataFromInterestedNodes() {
   }));
 }
 
-let gridApi = ref({});
-let gridColumnApi = ref({});
+let gridApi: any = ref({});
+let gridColumnApi: any = ref({});
 
 function onGridReady(params: any) {
   gridApi = params.api
@@ -80,7 +80,7 @@ function onGridReady(params: any) {
 
 function autoSizeAll(skipHeader: boolean) {
   var allColumnIds: string[] = [];
-  gridColumnApi.getAllColumns().forEach(function (column) {
+  gridColumnApi.getAllColumns().forEach(function (column: any) {
     allColumnIds.push(column.colId);
   });
   gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
@@ -110,7 +110,7 @@ function reset() {
 }
 
 function rowDoubleClicked() {
-  const id = gridApi.getSelectedNodes().map(node => node.data)[0].id;
+  const id = gridApi.getSelectedNodes().map((node: any) => node.data)[0].id;
   const node = store.getters['mapModule/getInterestedNodes'].filter((n: Node) => n.id == id);
 
   let coordinate: Coordinates;
@@ -155,7 +155,7 @@ const columnDefs = ref([
     field: "latestNodeScan",
     headerTooltip: "Latest Nodes Scan",
     filter: "agDateColumnFilter",
-    cellRenderer: (data) => {
+    cellRenderer: (data : any) => {
       return data.value ? new Date(data.value).toLocaleDateString() : "";
     },
   },

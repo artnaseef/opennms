@@ -28,6 +28,7 @@
 
 package org.opennms.netmgt.poller.monitors;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,12 @@ public class WmiMonitor extends AbstractServiceMonitor {
 		Double responseTime = null;
 		final InetAddress ipAddr = svc.getAddress();
 
-		final WmiAgentConfig agentConfig = WmiPeerFactory.getInstance().getAgentConfig(ipAddr);
+		WmiAgentConfig agentConfig = null;
+		try {
+			agentConfig = WmiPeerFactory.getInstance().getAgentConfig(ipAddr);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		String matchType = DEFAULT_WMI_MATCH_TYPE;
 		String compVal = DEFAULT_WMI_COMP_VAL;
 		String compOp = DEFAULT_WMI_COMP_OP;

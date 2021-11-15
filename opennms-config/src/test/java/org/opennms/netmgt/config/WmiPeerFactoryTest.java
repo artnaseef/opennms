@@ -33,6 +33,7 @@ import java.net.InetAddress;
 
 import junit.framework.TestCase;
 
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.ConfigurationTestUtils;
 
 /**
@@ -43,9 +44,11 @@ import org.opennms.core.test.ConfigurationTestUtils;
  *
  */
 public class WmiPeerFactoryTest extends TestCase {
-    private WmiPeerFactory getFactory(String amiConfigXml) throws IOException {
-        WmiPeerFactory factory = new WmiPeerFactory(ConfigurationTestUtils.getResourceForConfigWithReplacements(amiConfigXml));
-        factory.afterPropertiesSet();
+    private WmiPeerFactory getFactory() throws IOException {
+        //WmiPeerFactory factory = new WmiPeerFactory(ConfigurationTestUtils.getResourceForConfigWithReplacements(amiConfigXml));
+        WmiPeerFactory factory = BeanUtils.getBean("commonContext", "wmiPeerFactory", WmiPeerFactory.class);
+        //factory.afterPropertiesSet();
+        factory.reload();
         return factory;
     }
 
@@ -64,7 +67,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
@@ -92,7 +95,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -120,7 +123,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -148,7 +151,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -176,7 +179,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -212,7 +215,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -249,7 +252,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -285,7 +288,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -319,7 +322,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -354,7 +357,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(0, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -384,7 +387,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
@@ -410,7 +413,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
@@ -436,7 +439,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
@@ -462,7 +465,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory(amiConfigXml);
+        WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 

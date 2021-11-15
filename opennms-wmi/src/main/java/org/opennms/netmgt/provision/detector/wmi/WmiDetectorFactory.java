@@ -28,7 +28,9 @@
 
 package org.opennms.netmgt.provision.detector.wmi;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.opennms.netmgt.config.WmiPeerFactory;
@@ -50,7 +52,13 @@ public class WmiDetectorFactory extends GenericServiceDetectorFactory<WmiDetecto
     }
 
     public Map<String, String> getRuntimeAttributes(InetAddress address) {
-        return WmiPeerFactory.getInstance().getAgentConfig(address).toMap();
+        Map<String, String> configMap = new HashMap<String, String>();
+        try {
+            configMap =  WmiPeerFactory.getInstance().getAgentConfig(address).toMap();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return configMap;
     }
 
 }

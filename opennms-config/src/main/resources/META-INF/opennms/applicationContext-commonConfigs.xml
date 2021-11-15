@@ -53,11 +53,11 @@
 
 	<!--  collectd config factory is now init'd in the dao context -->
 
-    <bean id="init-wmiPeerFactory" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+    <!--<bean id="init-wmiPeerFactory" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
 		<property name="staticMethod"><value>org.opennms.netmgt.config.WmiPeerFactory.init</value></property>
-	</bean>
+	</bean>-->
 
-	<bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory" depends-on="init-wmiPeerFactory" factory-method="getInstance"/>
+	<bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory"/>
 
 	<!-- This is shared by eventd and trapd. -->
 	<bean id="eventConfResourceLocation" class="java.lang.String">

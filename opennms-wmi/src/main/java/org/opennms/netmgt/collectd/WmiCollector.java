@@ -110,7 +110,12 @@ public class WmiCollector extends AbstractRemoteServiceCollector {
         final String collectionName = ParameterMap.getKeyedString(parameters, "collection", ParameterMap.getKeyedString(parameters, "wmi-collection", null));
         final WmiCollection collection = WmiDataCollectionConfigFactory.getInstance().getWmiCollection(collectionName);
         runtimeAttributes.put(WMI_COLLECTION_KEY, collection);
-        final WmiAgentConfig agentConfig = WmiPeerFactory.getInstance().getAgentConfig(agent.getAddress());
+        WmiAgentConfig agentConfig = null;
+        try {
+            agentConfig = WmiPeerFactory.getInstance().getAgentConfig(agent.getAddress());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         runtimeAttributes.put(WMI_AGENT_CONFIG_KEY, agentConfig);
         return runtimeAttributes;
     }
@@ -266,12 +271,12 @@ public class WmiCollector extends AbstractRemoteServiceCollector {
 
     private void initWMIPeerFactory() {
         LOG.debug("initialize: Initializing WmiPeerFactory");
-        try {
+/*        try {
             WmiPeerFactory.init();
         } catch (final IOException e) {
             LOG.error("initialize: Error reading configuration.", e);
             throw new UndeclaredThrowableException(e);
-        }
+        }*/
     }
 
     private void initWMICollectionConfig() {

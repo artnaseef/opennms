@@ -31,10 +31,13 @@ package org.opennms.netmgt.config;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
-import org.opennms.core.spring.BeanUtils;
-import org.opennms.core.test.ConfigurationTestUtils;
+import static org.junit.Assert.assertEquals;
 
 /**
  * JUnit tests for the configureSNMP event handling and optimization of
@@ -43,18 +46,28 @@ import org.opennms.core.test.ConfigurationTestUtils;
  * @author <a href="mailto:david@opennms.org>David Hustace</a>
  *
  */
-public class WmiPeerFactoryTest extends TestCase {
-    private WmiPeerFactory getFactory() throws IOException {
+@RunWith(OpenNMSJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
+       // "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
+        "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-config-service.xml",
+        "classpath:/META-INF/opennms/component-dao.xml"})
+public class WmiPeerFactoryTest  {
+    @Autowired
+    WmiPeerFactory factory;
+   /* private WmiPeerFactory getFactory() throws IOException {
         //WmiPeerFactory factory = new WmiPeerFactory(ConfigurationTestUtils.getResourceForConfigWithReplacements(amiConfigXml));
-        WmiPeerFactory factory = BeanUtils.getBean("commonContext", "wmiPeerFactory", WmiPeerFactory.class);
+        //WmiPeerFactory factory = BeanUtils.getBean("commonContext", "wmiPeerFactory", WmiPeerFactory.class);
         //factory.afterPropertiesSet();
         factory.reload();
         return factory;
-    }
+    }*/
 
     /**
      * @throws IOException 
      */
+    @Test
     public final void testOneSpecific() throws IOException {
 
         String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
@@ -67,7 +80,7 @@ public class WmiPeerFactoryTest extends TestCase {
         "</wmi-config>\n" + 
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
@@ -80,22 +93,23 @@ public class WmiPeerFactoryTest extends TestCase {
      * This tests the merging of a new specific into a definition that already contains a specific
      * that is adjacent.  The two specifics should be converted to a single range in the definition.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testAddAdjacentSpecificToDef() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>192.168.0.5</specific>\n" + 
-        "       <specific>192.168.0.6</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <specific>192.168.0.5</specific>\n" +
+        "       <specific>192.168.0.6</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -109,21 +123,21 @@ public class WmiPeerFactoryTest extends TestCase {
         assertEquals("192.168.0.5", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getBegin());
         assertEquals("192.168.0.6", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getEnd());
     }
-
+    @Test
     public final void testAddAdjacentSpecificToDefIPv6() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb</specific>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb</specific>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -137,21 +151,21 @@ public class WmiPeerFactoryTest extends TestCase {
         assertEquals("fe80:0000:0000:0000:0000:0000:0000:fedb", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getBegin());
         assertEquals("fe80:0000:0000:0000:0000:0000:0000:fedc", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getEnd());
     }
-
+    @Test
     public final void testAddAdjacentSpecificToDefIPv6WithSameScopeId() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb%5</specific>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc%5</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb%5</specific>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc%5</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -165,21 +179,21 @@ public class WmiPeerFactoryTest extends TestCase {
         assertEquals("fe80:0000:0000:0000:0000:0000:0000:fedb%5", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getBegin());
         assertEquals("fe80:0000:0000:0000:0000:0000:0000:fedc%5", factory.getConfig().getDefinitions().get(0).getRanges().get(0).getEnd());
     }
-
+    @Test
     public final void testAddAdjacentSpecificToDefIPv6WithDifferentScopeIds() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb%1</specific>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc%2</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedb%1</specific>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:fedc%2</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(2, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -195,27 +209,28 @@ public class WmiPeerFactoryTest extends TestCase {
 
     /**
      * This tests the ability to move a specific from one definition into a range of another definition.  The
-     * results should be that the 2 ranges in the first definition are recombined into a single range based on 
+     * results should be that the 2 ranges in the first definition are recombined into a single range based on
      * the single IP address that was in a different existing definition that will now be removed and the definition
      * deleted.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public void testRecombineSpecificIntoRange() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fed0%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fed9%1\"/>\n" + 
-        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fedb%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fedf%1\"/>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:feda%1</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fed0%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fed9%1\"/>\n" +
+        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fedb%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fedf%1\"/>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:feda%1</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -232,27 +247,28 @@ public class WmiPeerFactoryTest extends TestCase {
 
     /**
      * This tests the ability to move a specific from one definition into a range of another definition.  The
-     * results should be that the 2 ranges in the first definition are recombined into a single range based on 
+     * results should be that the 2 ranges in the first definition are recombined into a single range based on
      * the single IP address that was in a different existing definition that will now be removed and the definition
      * deleted.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public void testRecombineSpecificIntoRangeWithDifferentScopeIds() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fed0%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fed9%1\"/>\n" + 
-        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fedb%2\" end=\"fe80:0000:0000:0000:0000:0000:0000:fedf%2\"/>\n" + 
-        "       <specific>fe80:0000:0000:0000:0000:0000:0000:feda%1</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fed0%1\" end=\"fe80:0000:0000:0000:0000:0000:0000:fed9%1\"/>\n" +
+        "       <range begin=\"fe80:0000:0000:0000:0000:0000:0000:fedb%2\" end=\"fe80:0000:0000:0000:0000:0000:0000:fedf%2\"/>\n" +
+        "       <specific>fe80:0000:0000:0000:0000:0000:0000:feda%1</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -273,22 +289,23 @@ public class WmiPeerFactoryTest extends TestCase {
      * This tests the addition of a new specific definition that is the same address as the beginning of
      * a range in a current definition.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testNewSpecificSameAsBeginInOldDef() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" + 
-        "       <specific>192.168.0.6</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" +
+        "       <specific>192.168.0.6</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+        //WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -307,22 +324,23 @@ public class WmiPeerFactoryTest extends TestCase {
      * This tests the addition of a new specific definition that is the same address as the beginning of
      * a range in a current definition.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testNewSpecificSameAsEndInOldDef() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" + 
-        "       <specific>192.168.0.12</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" +
+        "       <specific>192.168.0.12</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(1, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -341,23 +359,24 @@ public class WmiPeerFactoryTest extends TestCase {
      * This tests the merging of a new definition that contains a range of IP addresses that overlaps
      * the end of one range and the beginning of another range in a current definition.
      *
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public void testOverlapsTwoRanges() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"password\">\n" + 
-        "   <definition>\n" + 
-        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" + 
-        "       <range begin=\"192.168.0.20\" end=\"192.168.0.100\"/>\n" + 
-        "       <range begin=\"192.168.0.8\" end=\"192.168.0.30\"/>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"password\">\n" +
+        "   <definition>\n" +
+        "       <range begin=\"192.168.0.6\" end=\"192.168.0.12\"/>\n" +
+        "       <range begin=\"192.168.0.20\" end=\"192.168.0.100\"/>\n" +
+        "       <range begin=\"192.168.0.8\" end=\"192.168.0.30\"/>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
         assertEquals(0, factory.getConfig().getDefinitions().get(0).getSpecifics().size());
@@ -373,106 +392,110 @@ public class WmiPeerFactoryTest extends TestCase {
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testEncodedPassDefault() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"b2JzY3VyaXR5RlRXIQ===\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>192.168.0.5</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"b2JzY3VyaXR5RlRXIQ===\">\n" +
+        "   <definition>\n" +
+        "       <specific>192.168.0.5</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
         factory.optimize();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
-        
+
         assertEquals("obscurityFTW!", factory.getAgentConfig(InetAddress.getByName("1.1.1.1")).getPassword());
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testEncodedPassDefinition() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"b2JzY3VyaXR5RlRXIQ===\">\n" + 
-        "   <definition password=\"b2JzY3VyZSE9c2VjdXJl===\">\n" + 
-        "       <specific>192.168.0.5</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"b2JzY3VyaXR5RlRXIQ===\">\n" +
+        "   <definition password=\"b2JzY3VyZSE9c2VjdXJl===\">\n" +
+        "       <specific>192.168.0.5</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
         factory.optimize();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
-        
+
         assertEquals("obscure!=secure", factory.getAgentConfig(InetAddress.getByName("192.168.0.5")).getPassword());
     }
-    
+
     /**
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testUnencodedPassDefault() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"clarityFTW!\">\n" + 
-        "   <definition>\n" + 
-        "       <specific>192.168.0.5</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"clarityFTW!\">\n" +
+        "   <definition>\n" +
+        "       <specific>192.168.0.5</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
         factory.optimize();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
-        
+
         assertEquals("clarityFTW!", factory.getAgentConfig(InetAddress.getByName("1.1.1.1")).getPassword());
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
+    @Test
     public final void testUnencodedPassDefinition() throws IOException {
 
-        String amiConfigXml = "<?xml version=\"1.0\"?>\n" + 
-        "<wmi-config retry=\"3\" timeout=\"800\"\n" + 
-        "   password=\"clarityFTW!\">\n" + 
-        "   <definition password=\"aVerySecureOne\">\n" + 
-        "       <specific>192.168.0.5</specific>\n" + 
-        "   </definition>\n" + 
-        "\n" + 
-        "</wmi-config>\n" + 
+        String amiConfigXml = "<?xml version=\"1.0\"?>\n" +
+        "<wmi-config retry=\"3\" timeout=\"800\"\n" +
+        "   password=\"clarityFTW!\">\n" +
+        "   <definition password=\"aVerySecureOne\">\n" +
+        "       <specific>192.168.0.5</specific>\n" +
+        "   </definition>\n" +
+        "\n" +
+        "</wmi-config>\n" +
         "";
 
-        WmiPeerFactory factory = getFactory();
+       // WmiPeerFactory factory = getFactory();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
 
         factory.optimize();
 
         assertEquals(1, factory.getConfig().getDefinitions().size());
-        
+
         assertEquals("aVerySecureOne", factory.getAgentConfig(InetAddress.getByName("192.168.0.5")).getPassword());
     }
 

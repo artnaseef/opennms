@@ -30,7 +30,7 @@ const getAlarms = async (queryParameters?: QueryParameters): Promise<AlarmApiRes
     }
 }
 
-const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryParameters): Promise<T> => {
+const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryParameters): Promise<string | false>  => {
     let endpointWithQueryString = ""
 
     if (alarmQueryParameters) {

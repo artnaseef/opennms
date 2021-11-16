@@ -124,8 +124,8 @@ public class ConfigurationManagerServiceMock implements ConfigurationManagerServ
     }
 
     @Override
-    public void updateConfiguration(String configName, String configId, JsonAsString configObject) throws IOException {
-        Optional<ConfigSchema<?>> schema = this.getRegisteredSchema(configName);
+    public void updateConfiguration(ConfigKey configKey, JsonAsString configObject) throws IOException {
+        Optional<ConfigSchema<?>> schema = this.getRegisteredSchema(configKey.getConfigName());
         configOptional = Optional.of(schema.get().getConverter().jsonToXml(configObject.toString()));
     }
 
@@ -140,8 +140,8 @@ public class ConfigurationManagerServiceMock implements ConfigurationManagerServ
     }
 
     @Override
-    public String getJSONStrConfiguration(String configName, String configId) throws IOException {
-        return null;
+    public Optional<String> getJSONStrConfiguration(String configName, String configId)  {
+        return Optional.empty();
     }
 
     @Override

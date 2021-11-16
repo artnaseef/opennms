@@ -28,7 +28,7 @@
 
 package org.opennms.features.config.service.util;
 
-import static org.opennms.features.config.service.util.PropertiesConversionUtil.propertiesToJson;
+import static org.opennms.features.config.service.util.PropertiesConversionUtil.propertiesToJsonString;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -81,7 +81,7 @@ public class PropertiesCacheWithCm {
     }
 
     private Properties read() {
-      Optional<Map<String, String>> result = this.cm.getJSONConfiguration(configKey.getConfigName(), configKey.getConfigName())
+      Optional<Map<String, String>> result = this.cm.getJSONStrConfiguration(configKey.getConfigName(), configKey.getConfigName())
               .map(PropertiesConversionUtil::jsonToMap);
       if (result.isEmpty()) {
         return null;
@@ -99,7 +99,7 @@ public class PropertiesCacheWithCm {
       for(Entry<?, ?> entry : this.m_properties.entrySet()) {
         entries.put(entry.getKey().toString(), entry.getValue().toString());
       }
-      this.cm.updateConfiguration(this.configKey, propertiesToJson(entries));
+      this.cm.updateConfiguration(this.configKey, propertiesToJsonString(entries));
     }
 
     public Properties get() throws IOException {

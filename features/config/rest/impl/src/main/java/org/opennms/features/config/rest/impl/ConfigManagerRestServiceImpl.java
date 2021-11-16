@@ -36,11 +36,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.parser.converter.SwaggerConverter;
 import org.opennms.features.config.dao.api.ConfigItem;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.rest.api.ConfigManagerRestService;
@@ -49,6 +45,10 @@ import org.opennms.features.config.service.api.JsonAsString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.swagger.v3.oas.models.OpenAPI;
 
 /**
  * <b>Currently for testing OSGI integration</b>
@@ -127,8 +127,12 @@ public class ConfigManagerRestServiceImpl implements ConfigManagerRestService {
     @Override
     public Response getConfig(String configName, String configId) {
         try {
-            String jsonStr = configurationManagerService.getJSONStrConfiguration(configName, configId);
-            return Response.ok(jsonStr).build();
+            Optional<String> jsonStr = configurationManagerService.getJSONStrConfiguration(configName, configId);
+            if(jsonStr.isPresent()) {
+                return Response.ok(jsonStr).build();
+            } else  {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.NOT_FOUND).build();
         } catch (Exception e) {

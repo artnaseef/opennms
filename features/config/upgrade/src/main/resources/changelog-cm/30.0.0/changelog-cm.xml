@@ -30,4 +30,9 @@
         <cm:importConfig schemaId="jmxconfig" configId="default" filePath="jmx-config.xml"/>
     </changeSet>
 
+
+    <changeSet author="pschweizer" id="register-schema-datachoices">
+        <cm:registerSchema id="org.opennms.features.datachoices"/>
+        <cm:importConfig schemaId="org.opennms.features.datachoices" configId="default" filePath="org.opennms.features.datachoices.cfg"/>
+    </changeSet>
 </databaseChangeLog>

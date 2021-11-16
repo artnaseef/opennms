@@ -30,7 +30,7 @@ package org.opennms.features.config.service.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.opennms.features.config.service.util.PropertiesConversionUtil.jsonToMap;
-import static org.opennms.features.config.service.util.PropertiesConversionUtil.propertiesToJson;
+import static org.opennms.features.config.service.util.PropertiesConversionUtil.propertiesToJsonString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class PropertiesConversionUtilTest {
         originalMap.put("key1", "value1");
         originalMap.put("key2", null);
 
-        Map<String, Object> convertedMap = new HashMap<>(jsonToMap(propertiesToJson(originalMap)));
+        Map<String, Object> convertedMap = new HashMap<>(jsonToMap(propertiesToJsonString(originalMap).toString()));
         assertEquals(originalMap, convertedMap);
     }
 }

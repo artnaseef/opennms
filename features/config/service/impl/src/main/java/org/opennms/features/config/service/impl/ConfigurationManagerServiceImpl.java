@@ -222,8 +222,8 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
     }
 
     @Override
-    public void updateConfiguration(String configName, String configId, JsonAsString config) throws IOException {
-        this.updateConfiguration(new ConfigKey(configName, configId), new JSONObject(config.toString()));
+    public void updateConfiguration(ConfigKey configKey, JsonAsString config) throws IOException {
+        this.updateConfiguration(configKey, new JSONObject(config.toString()));
     }
 
     @Override
@@ -238,12 +238,8 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
     }
 
     @Override
-    public String getJSONStrConfiguration(String configName, String configId) throws IOException, IllegalArgumentException {
-        Optional<JSONObject> config = this.getJSONConfiguration(configName, configId);
-        if (config.isEmpty()) {
-            throw new IllegalArgumentException(configName + ":" + configId);
-        }
-        return config.get().toString();
+    public Optional<String> getJSONStrConfiguration(String configName, String configId) throws IllegalArgumentException {
+        return this.getJSONConfiguration(configName, configId).map(JSONObject::toString);
     }
 
     @Override

@@ -33,11 +33,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.json.JSONObject;
+import org.opennms.features.config.service.api.JsonAsString;
 
 public class PropertiesConversionUtil {
     // We expect to have a flat json with only simple data types as children.
     // Returns an immutable map.
-    public static Map<String, String> jsonToMap(JSONObject json) {
+    public static Map<String, String> jsonToMap(String jsonString) {
+        JSONObject  json = new JSONObject(jsonString);
         Map<String, String> map = new HashMap<>();
         for(String key : json.keySet()) {
             String value = Optional.of(json.get(key))
@@ -49,7 +51,8 @@ public class PropertiesConversionUtil {
         return map;
     }
 
-    public static JSONObject propertiesToJson(Map<String,?> map) {
+    /** We return a JSonString object, otherwise Osgi wil fail, see details at JsonAsString */
+    public static JsonAsString propertiesToJsonString(Map<String,?> map) {
         JSONObject json = new JSONObject();
         for(Map.Entry<?,?> entry : map.entrySet()) {
             Object value = entry.getValue();
@@ -58,7 +61,7 @@ public class PropertiesConversionUtil {
             }
             json.put(entry.getKey().toString(), value);
         }
-        return json;
+        return new JsonAsString(json);
     }
 
 }

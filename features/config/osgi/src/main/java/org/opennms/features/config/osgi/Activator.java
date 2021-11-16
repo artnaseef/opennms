@@ -28,25 +28,25 @@
 
 package org.opennms.features.config.osgi;
 
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Optional;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Activator implements BundleActivator {
 
     private final static Logger LOG = LoggerFactory.getLogger(Activator.class);
-
-    // TODO: Patrick we need to register for all OSGI PIDs
-    @Deprecated
-    private final static String PID = "org.opennms.features.topology.app.icons.application";
 
     private ServiceRegistration<PersistenceManager> registration;
 
@@ -57,10 +57,12 @@ public class Activator implements BundleActivator {
         config.put("service.ranking", 1000);
         LOG.info("Registering service {}.", CmPersistenceManager.class.getSimpleName());
 
-        final ConfigurationManagerService configService = Optional.ofNullable(context.getServiceReference(ConfigurationManagerService.class))
+        // find cm
+        final ConfigurationManagerService cm = Optional.ofNullable(context.getServiceReference(ConfigurationManagerService.class))
                 .map(context::getService)
                 .orElseThrow(() -> new IllegalStateException("Cannot find " + ConfigurationManagerService.class.getName()));
 
+        // find the FilePersistenceManager, we delegate to it for non converted services
         final PersistenceManager delegate =
                 context.getServiceReferences(PersistenceManager.class, null)
                         .stream()
@@ -69,8 +71,40 @@ public class Activator implements BundleActivator {
                         .findAny()
                         .orElseThrow(() -> new IllegalStateException("Cannot find " + PersistenceManager.class.getName()));
 
-        CmPersistenceManager persistenceManager = new CmPersistenceManager(context, configService, delegate);
+        // register our CmPersistenceManager (instead of FilePersistenceManager)
+        Runnable registerCallbacksForConfigChanges = () -> registerCallbacksForConfigChanges(context, cm);
+        CmPersistenceManager persistenceManager = new CmPersistenceManager(context, cm, delegate, registerCallbacksForConfigChanges);
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
+
+        // registerCallbacksForConfigChanges(context, cm);
+
+        LOG.info(CmPersistenceManager.class.getSimpleName() + " started");
+    }
+
+    private void registerCallbacksForConfigChanges(BundleContext context, ConfigurationManagerService cm)  {
+        // Find ConfigurationAdmin;
+        final ConfigurationAdmin configurationAdmin;
+        try {
+            configurationAdmin = context.getServiceReferences(ConfigurationAdmin.class, null)
+                    .stream()
+                    .map(context::getService)
+                    .findAny()
+                    .orElseThrow(() -> new IllegalStateException("Cannot find " + PersistenceManager.class.getName()));
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Register all callbacks for config changes
+        for (String pid : MigratedServices.PIDS) {
+            ConfigKey key = new ConfigKey(pid, "default");
+            cm.registerReloadConsumer(key, k -> {
+                try {
+                    configurationAdmin.getConfiguration(k.getConfigName()).update();
+                } catch (IOException e) {
+                    LOG.warn("Cannot register callback from pid={}", pid, e);
+                }
+            });
+        }
     }
 
     @Override

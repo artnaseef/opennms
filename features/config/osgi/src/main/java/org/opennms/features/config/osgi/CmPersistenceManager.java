@@ -35,8 +35,10 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.cm.PersistenceManager;
+import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
 import org.osgi.framework.BundleContext;
@@ -54,19 +56,23 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
     private final static Logger LOG = LoggerFactory.getLogger(CmPersistenceManager.class);
 
     // TODO: Patrick we need to register for all OSGI PIDs
-    private final static String PID = "org.opennms.features.topology.app.icons.application";
+
     private final static String CONFIG_ID = "default"; // TODO: Patrick deal with services with multiple configurations
 
     private final ConfigurationManagerService configService;
     private final BundleContext bundleContext;
     private final PersistenceManager delegate;
+    // TODO: Patrick: we need to fina a better way to register the callbacks
+    private final Runnable registerCallbacksForConfigChanges;
+    private final AtomicBoolean callbacksRegistered = new AtomicBoolean(false);
 
-
-    public CmPersistenceManager(final BundleContext bundleContext, final ConfigurationManagerService configService, final PersistenceManager delegate) {
+    public CmPersistenceManager(final BundleContext bundleContext, final ConfigurationManagerService configService,
+                                final PersistenceManager delegate,
+                                final Runnable registerCallbacksForConfigChanges) {
         this.configService = configService;
-        // this.configService.registerForUpdates(PID, this);
         this.bundleContext = bundleContext;
         this.delegate = delegate;
+        this.registerCallbacksForConfigChanges = registerCallbacksForConfigChanges;
     }
 
     @Override
@@ -74,17 +80,19 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
         if (shouldDelegate(pid)) {
             return delegate.exists(pid);
         }
-        try {
-            return configService.getJSONConfiguration(pid, "default").isPresent();
-        } catch (IOException e) {
-           return false;
-        }
+        return configService.getJSONConfiguration(pid, "default").isPresent();
     }
 
     @Override
     public Enumeration getDictionaries() throws IOException {
+        if(!callbacksRegistered.get()) {
+            registerCallbacksForConfigChanges.run(); // TODO: Patrick
+            callbacksRegistered.set(true);
+        }
         List<Dictionary<String, String>> dictionaries = Collections.list(delegate.getDictionaries());
-        loadInternal(PID).ifPresent(dictionaries::add);
+        for(String pid : MigratedServices.PIDS) {
+            loadInternal(pid).ifPresent(dictionaries::add);
+        }
         return Collections.enumeration(dictionaries);
     }
 
@@ -111,7 +119,7 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
 
         Optional<Dictionary<String, String>> confFromConfigService = loadInternal(pid);
         if(confFromConfigService.isEmpty() || !equalsWithoutRevision(props, confFromConfigService.get())) {
-            configService.updateConfiguration(pid, "default", new JsonAsString(DictionaryUtil.writeToJson(props)));
+            configService.updateConfiguration(new ConfigKey(pid, "default"), new JsonAsString(DictionaryUtil.writeToJson(props)));
         }
     }
 

@@ -99,7 +99,13 @@ public interface ConfigurationManagerService {
      */
     void unregisterConfiguration(String configName, String configId) throws IOException;
 
-    void updateConfiguration(String configName, String configId,
+    /** @deprecated use updateConfiguration(final ConfigKey configKey, JsonAsString configObject) instead */
+    default void updateConfiguration(String configName, String configId,
+                             JsonAsString configObject) throws IOException, IllegalArgumentException {
+        updateConfiguration(new ConfigKey (configName, configId), configObject);
+    }
+
+    void updateConfiguration(final ConfigKey configKey,
                              JsonAsString configObject) throws IOException, IllegalArgumentException;
 
     void updateConfiguration(final ConfigKey configKey, JSONObject config) throws IOException, IllegalArgumentException;
@@ -120,7 +126,7 @@ public interface ConfigurationManagerService {
      * @return config in json string
      * @see #getJSONStrConfiguration(String, String)
      */
-    String getJSONStrConfiguration(String configName, String configId) throws IOException;
+    Optional<String> getJSONStrConfiguration(String configName, String configId);
 
     /**
      * get config as xml by configName, configId

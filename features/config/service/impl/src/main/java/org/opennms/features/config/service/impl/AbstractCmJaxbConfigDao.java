@@ -195,6 +195,7 @@ public abstract class AbstractCmJaxbConfigDao<ENTITY_CLASS> {
      * @throws IOException
      */
     public void updateConfig(final String configId, String jsonConfigString) throws IOException {
+        lastKnownEntityMap.remove(configId);
         configurationManagerService.updateConfiguration(this.getConfigName(), configId, new JsonAsString(jsonConfigString));
     }
 

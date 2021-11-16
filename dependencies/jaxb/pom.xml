@@ -20,11 +20,17 @@
       <artifactId>jaxb-runtime</artifactId>
       <version>2.3.2</version>
     </dependency>
+    <!-- replace MOXy with eclipselink prevent signer information does not match signer information of other classes in the same package -->
     <dependency>
+      <groupId>org.eclipse.persistence</groupId>
+      <artifactId>eclipselink</artifactId>
+      <version>${eclipselinkVersion}</version>
+    </dependency>
+    <!--dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>org.eclipse.persistence.moxy</artifactId>
       <version>${eclipselinkVersion}</version>
-    </dependency>
+    </dependency-->
     <!-- MOXy relies on javax.mail classes for Base64 decoding -->
     <dependency>
       <groupId>javax.mail</groupId>

@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.Assert.assertEquals;
@@ -48,14 +49,16 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {
-        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
+        //"classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
        // "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
-        "classpath:/META-INF/opennms/applicationContext-soa.xml",
-        "classpath:/META-INF/opennms/applicationContext-config-service.xml",
-        "classpath:/META-INF/opennms/component-dao.xml"})
+       // "classpath:/META-INF/opennms/applicationContext-soa.xml",
+       // "classpath:/META-INF/opennms/applicationContext-config-service.xml",
+         "classpath:applicationContext-mockWmiPeerFactory.xml"
+
+       })
 public class WmiPeerFactoryTest  {
     @Autowired
-    WmiPeerFactory factory;
+    public WmiPeerFactory factory;
    /* private WmiPeerFactory getFactory() throws IOException {
         //WmiPeerFactory factory = new WmiPeerFactory(ConfigurationTestUtils.getResourceForConfigWithReplacements(amiConfigXml));
         //WmiPeerFactory factory = BeanUtils.getBean("commonContext", "wmiPeerFactory", WmiPeerFactory.class);

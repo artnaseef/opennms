@@ -11,7 +11,7 @@
       </div>
 </template>
 
-<script lang="ts">
+<script>
 
 export default {
       data: function () {
@@ -30,18 +30,18 @@ export default {
             onSelectionChanged() {
                   if (this.currentValue === '') {
                         // clear the filter
-                        this.params.parentFilterInstance((instance: any) => {
+                        this.params.parentFilterInstance((instance) => {
                               instance.onFloatingFilterChanged(null, null);
                         });
                         return;
                   }
 
-                  this.params.parentFilterInstance((instance: any) => {
+                  this.params.parentFilterInstance((instance) => {
                         instance.onFloatingFilterChanged('contains', this.currentValue);
                   });
             },
 
-            onParentModelChanged(parentModel: any) {
+            onParentModelChanged(parentModel) {
                   // When the filter is empty we will receive a null value here
                   if (!parentModel) {
                         this.currentValue = '';

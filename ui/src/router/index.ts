@@ -2,8 +2,8 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import Nodes from '@/containers/Nodes.vue'
 import NodeDetails from '@/containers/NodeDetails.vue'
 import Map from '@/containers/Map.vue'
-import MapNodes from "@/components/map/MapNodesGrid.vue";
-import MapAlarms from "@/components/map/MapAlarmsGrid.vue";
+import MapNodes from "@/components/Map/MapNodesGrid.vue";
+import MapAlarms from "@/components/Map/MapAlarmsGrid.vue";
 
 const router = createRouter({
   history: createWebHashHistory('/opennms/ui'),

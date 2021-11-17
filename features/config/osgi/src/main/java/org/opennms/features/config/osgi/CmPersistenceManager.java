@@ -41,9 +41,6 @@ import org.apache.felix.cm.PersistenceManager;
 import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,44 +48,37 @@ import org.slf4j.LoggerFactory;
  * Our own implementation of a PersistenceManager (subclass of FilePersistenceManager).
  * Must be activated in custom.properties: felix.cm.pm=org.opennms.config.osgi.CmPersistenceManager
  */
-public class CmPersistenceManager implements PersistenceManager { // TODO: Patrick decide if we need NotCachablePersistenceManager
+public class CmPersistenceManager implements PersistenceManager {
 
     private final static Logger LOG = LoggerFactory.getLogger(CmPersistenceManager.class);
-
-    // TODO: Patrick we need to register for all OSGI PIDs
 
     private final static String CONFIG_ID = "default"; // TODO: Patrick deal with services with multiple configurations
 
     private final ConfigurationManagerService configService;
-    private final BundleContext bundleContext;
     private final PersistenceManager delegate;
-    // TODO: Patrick: we need to fina a better way to register the callbacks
     private final Runnable registerCallbacksForConfigChanges;
     private final AtomicBoolean callbacksRegistered = new AtomicBoolean(false);
 
-    public CmPersistenceManager(final BundleContext bundleContext, final ConfigurationManagerService configService,
+    public CmPersistenceManager(final ConfigurationManagerService configService,
                                 final PersistenceManager delegate,
                                 final Runnable registerCallbacksForConfigChanges) {
         this.configService = configService;
-        this.bundleContext = bundleContext;
         this.delegate = delegate;
         this.registerCallbacksForConfigChanges = registerCallbacksForConfigChanges;
     }
 
     @Override
     public boolean exists(final String pid) {
+        ensureCallbacksHaveBeenRegistered();
         if (shouldDelegate(pid)) {
             return delegate.exists(pid);
         }
-        return configService.getJSONConfiguration(pid, "default").isPresent();
+        return configService.getJSONConfiguration(pid, CONFIG_ID).isPresent();
     }
 
     @Override
     public Enumeration getDictionaries() throws IOException {
-        if(!callbacksRegistered.get()) {
-            registerCallbacksForConfigChanges.run(); // TODO: Patrick
-            callbacksRegistered.set(true);
-        }
+        ensureCallbacksHaveBeenRegistered();
         List<Dictionary<String, String>> dictionaries = Collections.list(delegate.getDictionaries());
         for(String pid : MigratedServices.PIDS) {
             loadInternal(pid).ifPresent(dictionaries::add);
@@ -98,6 +88,7 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
 
     @Override
     public Dictionary load(String pid) throws IOException {
+        ensureCallbacksHaveBeenRegistered();
         if (shouldDelegate(pid)) {
             return delegate.load(pid); // nothing to do for us
         }
@@ -106,12 +97,13 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
     }
 
     private Optional<Dictionary<String, String>> loadInternal(String pid) throws IOException {
-        return configService.getJSONConfiguration(pid, "default")
+        return configService.getJSONConfiguration(pid, CONFIG_ID)
                 .map(DictionaryUtil::createFromJson);
     }
 
     @Override
     public void store(String pid, Dictionary props) throws IOException {
+        ensureCallbacksHaveBeenRegistered();
         if (shouldDelegate(pid)) {
             delegate.store(pid, props);
             return; // nothing to do for us
@@ -119,12 +111,13 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
 
         Optional<Dictionary<String, String>> confFromConfigService = loadInternal(pid);
         if(confFromConfigService.isEmpty() || !equalsWithoutRevision(props, confFromConfigService.get())) {
-            configService.updateConfiguration(new ConfigKey(pid, "default"), new JsonAsString(DictionaryUtil.writeToJson(props)));
+            configService.updateConfiguration(new ConfigKey(pid, CONFIG_ID), new JsonAsString(DictionaryUtil.writeToJson(props)));
         }
     }
 
     @Override
     public void delete(final String pid) throws IOException {
+        ensureCallbacksHaveBeenRegistered();
         if (shouldDelegate(pid)) {
             delegate.delete(pid);
             return; // nothing to do for us
@@ -136,71 +129,13 @@ public class CmPersistenceManager implements PersistenceManager { // TODO: Patri
         return !MigratedServices.isMigrated(pid);
     }
 
-    // Hook to be notified of changes from ConfigurationService
-// TODO: Patrick
-    public void configurationHasChanged(final String pid) {
-
-        Optional<Dictionary<String, String>> dictionary = null ; // TODO: Patrick configService.getConfigurationAsDictionary(pid);
-        if (dictionary.isEmpty()) {
-            // something is wrong here. We should get it since we were notified about the change
-            return;
+    private void ensureCallbacksHaveBeenRegistered() {
+        if (callbacksRegistered.get()) {
+            return; // already done
         }
-        Dictionary<String, String> confFromConfigService = dictionary.get();
-
-        final Optional<ConfigurationAdmin> configAdminOpt = Optional.ofNullable(bundleContext.getServiceReference(ConfigurationAdmin.class))
-                .map(bundleContext::getService);
-        if(configAdminOpt.isEmpty()) {
-            // something is wrong here. We should get the ConfigurationAdmin but we didn't => do nothing.
-            return;
+        if (callbacksRegistered.compareAndSet(false, true)) {
+            registerCallbacksForConfigChanges.run();
         }
-
-
-        Optional<Configuration> configOpt = configAdminOpt.map(a -> silenceToNull(() -> a.getConfiguration(pid, "?org.opennms")));
-        if(configOpt.isEmpty()) {
-            // something is wrong here. We should get the Configuration but we didn't => do nothing.
-            return;
-        }
-
-        Configuration config = configOpt.get();
-        Dictionary<String, Object> confFromAdminService = Optional.ofNullable(config.getProperties())
-                .orElse(new Hashtable<>());
-
-        // remove properties that are no longer present
-        Enumeration<String> keys = confFromAdminService.keys();
-        while (keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            if (null == confFromConfigService.get(key)) {
-                confFromAdminService.remove(key);
-            }
-        }
-
-        // set / update properties
-        keys = confFromConfigService.keys();
-        while (keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            confFromAdminService.put(key, confFromConfigService.get(key));
-        }
-        try {
-            config.update(confFromAdminService);
-        } catch (IOException e) {
-            // TODO: Patrick
-        }
-    }
-
-    // TODO: Patrick: replace or move everything below to helper class
-
-
-    private static <Output> Output silenceToNull(final ProducerWithException<Output> function) {
-        try {
-            return function.apply();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    @FunctionalInterface
-    public interface ProducerWithException<Output> {
-        Output apply() throws Exception;
     }
 
     public static boolean equalsWithoutRevision(Dictionary<String, String> a, Dictionary<String, String> b) {

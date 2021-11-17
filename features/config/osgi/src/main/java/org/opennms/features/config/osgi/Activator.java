@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 public class Activator implements BundleActivator {
 
     private final static Logger LOG = LoggerFactory.getLogger(Activator.class);
-
     private ServiceRegistration<PersistenceManager> registration;
 
     @Override
@@ -71,12 +70,15 @@ public class Activator implements BundleActivator {
                         .findAny()
                         .orElseThrow(() -> new IllegalStateException("Cannot find " + PersistenceManager.class.getName()));
 
-        // register our CmPersistenceManager (instead of FilePersistenceManager)
+        // Create Runnable to register CallbacksForConfigChanges:
+        // We need to run this Runnable after the full registration of the CMPersistenceManager (after Activator.start() is fully finished)
+        // otherwise ConfigAdmin might not find CmPersistenceManager
+        // thus we execute the registration the first time a method on CmPersistenceManager is called => at that time it is fully registered
         Runnable registerCallbacksForConfigChanges = () -> registerCallbacksForConfigChanges(context, cm);
-        CmPersistenceManager persistenceManager = new CmPersistenceManager(context, cm, delegate, registerCallbacksForConfigChanges);
-        registration = context.registerService(PersistenceManager.class, persistenceManager, config);
+        CmPersistenceManager persistenceManager = new CmPersistenceManager(cm, delegate, registerCallbacksForConfigChanges);
 
-        // registerCallbacksForConfigChanges(context, cm);
+        // register our CmPersistenceManager (instead of FilePersistenceManager)
+        registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
         LOG.info(CmPersistenceManager.class.getSimpleName() + " started");
     }

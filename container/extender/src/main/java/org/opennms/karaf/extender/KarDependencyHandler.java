@@ -130,7 +130,7 @@ public class KarDependencyHandler implements Runnable {
                 .collect(Collectors.toSet());
         try {
             LOG.info("Installing features: {}", featuresToInstall);
-            featuresService.installFeatures(featuresToInstall, EnumSet.noneOf(FeaturesService.Option.class));
+            featuresService.installFeatures(featuresToInstall, EnumSet.of(FeaturesService.Option.NoAutoRefreshBundles, FeaturesService.Option.NoAutoRefreshManagedBundles, FeaturesService.Option.NoAutoRefreshUnmanagedBundles));
         } catch (Exception e) {
             LOG.error("Failed to install one or more features.", e);
         }

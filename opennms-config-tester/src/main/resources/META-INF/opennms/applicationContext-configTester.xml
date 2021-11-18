@@ -519,11 +519,11 @@
 
   <bean id="viewsDisplayFactory" class="org.opennms.netmgt.config.ViewsDisplayFactory" depends-on="viewsDisplayFactory-init" factory-method="getInstance"/>
 
-  <bean id="wmiPeerFactory-init" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+  <!--<bean id="wmiPeerFactory-init" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
     <property name="staticMethod"><value>org.opennms.netmgt.config.WmiPeerFactory.init</value></property>
-  </bean>
+  </bean>-->
 
-  <bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory" depends-on="wmiPeerFactory-init" factory-method="getInstance"/>
+  <bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory"/>
 
   <bean id="wmiDataCollectionConfigFactory-init" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
     <property name="staticMethod"><value>org.opennms.netmgt.config.WmiDataCollectionConfigFactory.init</value></property>

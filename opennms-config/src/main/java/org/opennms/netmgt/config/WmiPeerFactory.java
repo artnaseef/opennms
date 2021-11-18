@@ -117,6 +117,7 @@ public class WmiPeerFactory extends AbstractCmJaxbConfigDao<WmiConfig> {
         super(WmiConfig.class, "wmi Configuration");
         m_config = config;
     }
+
     @PostConstruct
     public void postConstruct() throws IOException {
         reload();
@@ -155,7 +156,7 @@ public class WmiPeerFactory extends AbstractCmJaxbConfigDao<WmiConfig> {
     public  void reload() throws IOException {
         this.m_config = this.loadConfig(this.getDefaultConfigId());
         //init();
-        // getInstance().update();
+        //getInstance().update();
     }
 
     /**
@@ -171,7 +172,7 @@ public class WmiPeerFactory extends AbstractCmJaxbConfigDao<WmiConfig> {
         }
         return m_singleton;*/
         WmiPeerFactory wmiPeerFactory = BeanUtils.getBean("commonContext", "wmiPeerFactory", WmiPeerFactory.class);
-        wmiPeerFactory.reload();
+        //wmiPeerFactory.reload();
         return wmiPeerFactory;
 
     }

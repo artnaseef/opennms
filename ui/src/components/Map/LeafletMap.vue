@@ -26,6 +26,7 @@
               v-for="(node, index) in interestedNodes"
               :key="index"
               :lat-lng="getCoordinateFromNode(node)"
+              :icon="setIcon(node)"
               add
             >
               <l-popup>{{ node.label }}</l-popup>
@@ -56,7 +57,8 @@ import {
 import MarkerCluster from "./MarkerCluster.vue";
 import { Vue } from "vue-class-component";
 import { useStore } from "vuex";
-import { Coordinates } from "@/types";
+import { Coordinates, Node } from "@/types";
+import L from "leaflet";
 
 let leafletReady = ref(false);
 let leafletObject = ref("");
@@ -106,6 +108,51 @@ function getInterestedNodesCoordinateMap() {
   });
   return map;
 }
+
+let interestedAlarms = computed(() => {
+  return store.getters["mapModule/getAlarmsFromSelectedNodes"];
+});
+
+let setIcon = (node: Node): any => {
+  for (const alarm of interestedAlarms.value) {
+    if (node.label === alarm.nodeLabel) {
+      return L.icon({
+        iconUrl: setMarkerColor(alarm.severity),
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      })
+    }
+  }
+  return L.icon({
+    iconUrl: ("src/assets/Normal-icon.png"),
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  })
+}
+
+function setMarkerColor(severity: string) {
+  let iconPath;
+  switch (severity.toUpperCase()) {
+    case "NORMAL":
+      return (iconPath = "src/assets/Normal-icon.png");
+    case "WARNING":
+      return (iconPath = "src/assets/Warning-icon.png");
+    case "MINOR":
+      return (iconPath = "src/assets/Minor-icon.png");
+    case "MAJOR":
+      return (iconPath = "src/assets/Major-icon.png");
+    case "CRITICAL":
+      return (iconPath = "src/assets/Critical-icon.png");
+    default:
+      return (iconPath = "src/assets/Normal-icon.png");
+  }
+}
+
+
 
 async function onLeafletReady() {
   await nextTick();

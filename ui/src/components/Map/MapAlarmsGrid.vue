@@ -3,10 +3,18 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
+        <select
+          name="alarmOptions"
+          id="alarmOptions"
+          v-model="alarmOption"
+          :disabled="!hasAlarmSelected"
+        >
+          <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
+        </select>
         <feather-button primary @click="clearFilters()">Clear Filters</feather-button>
         <feather-button primary @click="applyFilters()">Filter Map</feather-button>
         <feather-button primary @click="reset()">Reset</feather-button>
-        <section>
+        <!-- <section>
           <FeatherSelect
             class="my-select"
             label="Alarm Action"
@@ -14,7 +22,7 @@
             v-model="alarmOption"
             :disabled="!hasAlarmSelected"
           ></FeatherSelect>
-        </section>
+        </section> -->
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -99,14 +107,8 @@ function getAlarmsFromSelectedNodes() {
     logMessage: alarm.logMessage,
   }));
 }
-const alarmOptions = ref([
-  {
-    id: 1,
-    name: "Rik",
-  },
-]);
 
-// const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
 let alarmOption = ref(alarmOptions.value[0]);
 
@@ -165,13 +167,13 @@ watch(
 
 const GStore: any = inject('GStore');
 
-let selectedAlarmIds:any = ref([]);
+let selectedAlarmIds: any = ref([]);
 
-let hasAlarmSelected:any = ref(false);
+let hasAlarmSelected: any = ref(false);
 
 function onSelectionChanged() {
   let selectedRows = gridApi.getSelectedNodes().map((node: any) => node.data);
-  selectedAlarmIds = selectedRows.map((alarm: any)=> alarm.id);
+  selectedAlarmIds = selectedRows.map((alarm: any) => alarm.id);
   hasAlarmSelected.value = selectedAlarmIds.length > 0;
 }
 
@@ -230,7 +232,7 @@ const columnDefs = ref([
       suppressFilterButton: true,
     },
     filterParams: {
-      textCustomComparator: (filter:string, value: any, filterText: any) => {
+      textCustomComparator: (filter: string, value: any, filterText: any) => {
         const filterTextUpperCase = filterText.toUpperCase();
         const valueUpperCase = value.toString().toUpperCase();
         enum ALARM_SEVERITY {

@@ -57,7 +57,7 @@
 		<property name="staticMethod"><value>org.opennms.netmgt.config.WmiPeerFactory.init</value></property>
 	</bean>-->
 
-	<bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory"/>
+	<bean id="wmiPeerFactory" class="org.opennms.netmgt.config.WmiPeerFactory" depends-on="forceUpgradeExecutor"/>
 
 	<!-- This is shared by eventd and trapd. -->
 	<bean id="eventConfResourceLocation" class="java.lang.String">

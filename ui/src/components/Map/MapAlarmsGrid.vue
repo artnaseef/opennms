@@ -320,7 +320,7 @@ const columnDefs = ref([
 }
 .button-group {
   width: 100%;
-  height: 130px;
+  height: 40px;
 }
 .map-alarms-grid {
   width: 100%;

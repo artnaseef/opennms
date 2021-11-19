@@ -12,11 +12,11 @@
         <cm:importConfig schemaId="provisiond" configId="default" filePath="provisiond-configuration.xml"/>
     </changeSet>
 
-    <changeSet author="ssuman" id="1.0-register-schema-enlinkd">
+<!--    <changeSet author="ssuman" id="1.0-register-schema-enlinkd">
         <cm:registerSchema id="enlinkd"/>
         <cm:importSchemaFromXsd id="enlinkd" xsdFileName="enlinkd-configuration.xsd" xsdFileHash="cf03a578f483997efbbd931700a2946bb08157352f802cf39be954aa84856471" rootElement="enlinkd-configuration"/>
         <cm:importConfig schemaId="enlinkd" configId="default" filePath="enlinkd-configuration.xml"/>
-    </changeSet>
+    </changeSet>-->
 
     <changeSet author="tmohanta" id="1.0-register-schema-discovery">
         <cm:registerSchema id="discovery"/>

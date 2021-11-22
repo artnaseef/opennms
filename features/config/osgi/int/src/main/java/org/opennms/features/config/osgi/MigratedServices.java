@@ -27,13 +27,14 @@
  *******************************************************************************/
 
 package org.opennms.features.config.osgi;
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 // TODO: Patrick: find a better solution, e.g. read all available PIDs dynamically from CM.
+// TODO: Patrick: keep MigratedServices between 2 projects in sync
 public class MigratedServices {
-    final static ImmutableSet<String> PIDS = ImmutableSet.<String>builder()
-            .add("org.opennms.features.datachoices")
-            .build();
+    final static Set<String> PIDS =  Set.of(
+            "org.opennms.features.datachoices"
+    );
 
     public static boolean isMigrated(final String pid) {
         return PIDS.contains(pid);

@@ -33,7 +33,7 @@ import java.util.Hashtable;
 import java.util.Optional;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.file.FilePersistenceManager;
+import org.apache.felix.cm.impl.Log;
 import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.osgi.framework.BundleActivator;
@@ -41,46 +41,39 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Activator implements BundleActivator {
 
-    private final static Logger LOG = LoggerFactory.getLogger(Activator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
+
     private ServiceRegistration<PersistenceManager> registration;
 
     @Override
     public void start(BundleContext context) throws Exception {
         Hashtable<String, Object> config = new Hashtable<>();
         config.put("name", CmPersistenceManager.class.getName());
-        config.put("service.ranking", 1000);
-        LOG.info("Registering service {}.", CmPersistenceManager.class.getSimpleName());
+        LOG.info( "Registering service {}.", CmPersistenceManager.class.getSimpleName() );
 
         // find cm
         final ConfigurationManagerService cm = Optional.ofNullable(context.getServiceReference(ConfigurationManagerService.class))
                 .map(context::getService)
                 .orElseThrow(() -> new IllegalStateException("Cannot find " + ConfigurationManagerService.class.getName()));
 
-        // find the FilePersistenceManager, we delegate to it for non converted services
-        final PersistenceManager delegate =
-                context.getServiceReferences(PersistenceManager.class, null)
-                        .stream()
-                        .map(context::getService)
-                        .filter(s -> s instanceof FilePersistenceManager)
-                        .findAny()
-                        .orElseThrow(() -> new IllegalStateException("Cannot find " + PersistenceManager.class.getName()));
-
         // Create Runnable to register CallbacksForConfigChanges:
         // We need to run this Runnable after the full registration of the CMPersistenceManager (after Activator.start() is fully finished)
         // otherwise ConfigAdmin might not find CmPersistenceManager
         // thus we execute the registration the first time a method on CmPersistenceManager is called => at that time it is fully registered
         Runnable registerCallbacksForConfigChanges = () -> registerCallbacksForConfigChanges(context, cm);
-        CmPersistenceManager persistenceManager = new CmPersistenceManager(cm, delegate, registerCallbacksForConfigChanges);
+        CmPersistenceManager persistenceManager = new CmPersistenceManager(cm, registerCallbacksForConfigChanges);
 
         // register our CmPersistenceManager (instead of FilePersistenceManager)
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
-        LOG.info(CmPersistenceManager.class.getSimpleName() + " started");
+        Log.logger.log( LogService.LOG_INFO, "{0} started.", new Object[]
+                { CmPersistenceManager.class.getSimpleName() } );
     }
 
     private void registerCallbacksForConfigChanges(BundleContext context, ConfigurationManagerService cm)  {
@@ -103,7 +96,7 @@ public class Activator implements BundleActivator {
                 try {
                     configurationAdmin.getConfiguration(k.getConfigName()).update();
                 } catch (IOException e) {
-                    LOG.warn("Cannot register callback from pid={}", pid, e);
+                    Log.logger.log(  LogService.LOG_WARNING, "Cannot register callback from pid=" + pid, e );
                 }
             });
         }
@@ -114,6 +107,7 @@ public class Activator implements BundleActivator {
         if (registration != null) {
             registration.unregister();
         }
-        LOG.info(CmPersistenceManager.class.getSimpleName() + " stopped");
+        Log.logger.log( LogService.LOG_INFO, "{0} stopped.", new Object[]
+                { CmPersistenceManager.class.getSimpleName() } );
     }
 }

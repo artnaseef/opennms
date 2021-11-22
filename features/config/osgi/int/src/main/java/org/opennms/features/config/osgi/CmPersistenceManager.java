@@ -36,13 +36,13 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.apache.felix.cm.PersistenceManager;
+import org.json.JSONObject;
 import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Our own implementation of a PersistenceManager (subclass of FilePersistenceManager).
@@ -50,64 +50,51 @@ import org.slf4j.LoggerFactory;
  */
 public class CmPersistenceManager implements PersistenceManager {
 
-    private final static Logger LOG = LoggerFactory.getLogger(CmPersistenceManager.class);
-
     private final static String CONFIG_ID = "default"; // TODO: Patrick deal with services with multiple configurations
 
     private final ConfigurationManagerService configService;
-    private final PersistenceManager delegate;
     private final Runnable registerCallbacksForConfigChanges;
     private final AtomicBoolean callbacksRegistered = new AtomicBoolean(false);
 
     public CmPersistenceManager(final ConfigurationManagerService configService,
-                                final PersistenceManager delegate,
                                 final Runnable registerCallbacksForConfigChanges) {
         this.configService = configService;
-        this.delegate = delegate;
         this.registerCallbacksForConfigChanges = registerCallbacksForConfigChanges;
     }
 
     @Override
     public boolean exists(final String pid) {
         ensureCallbacksHaveBeenRegistered();
-        if (shouldDelegate(pid)) {
-            return delegate.exists(pid);
-        }
         return configService.getJSONConfiguration(pid, CONFIG_ID).isPresent();
     }
 
     @Override
-    public Enumeration getDictionaries() throws IOException {
+    public Enumeration getDictionaries() {
         ensureCallbacksHaveBeenRegistered();
-        List<Dictionary<String, String>> dictionaries = Collections.list(delegate.getDictionaries());
-        for(String pid : MigratedServices.PIDS) {
-            loadInternal(pid).ifPresent(dictionaries::add);
-        }
+        List<Dictionary<String, String>> dictionaries = MigratedServices.PIDS.stream()
+                .map(this::loadInternal)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
         return Collections.enumeration(dictionaries);
     }
 
     @Override
-    public Dictionary load(String pid) throws IOException {
+    public Dictionary load(String pid) {
         ensureCallbacksHaveBeenRegistered();
-        if (shouldDelegate(pid)) {
-            return delegate.load(pid); // nothing to do for us
-        }
         return loadInternal(pid)
                 .orElse(new Hashtable());
     }
 
-    private Optional<Dictionary<String, String>> loadInternal(String pid) throws IOException {
-        return configService.getJSONConfiguration(pid, CONFIG_ID)
+    private Optional<Dictionary<String, String>> loadInternal(String pid) {
+        return configService.getJSONStrConfiguration(pid, CONFIG_ID)
+                .map(JSONObject::new)
                 .map(DictionaryUtil::createFromJson);
     }
 
     @Override
     public void store(String pid, Dictionary props) throws IOException {
         ensureCallbacksHaveBeenRegistered();
-        if (shouldDelegate(pid)) {
-            delegate.store(pid, props);
-            return; // nothing to do for us
-        }
 
         Optional<Dictionary<String, String>> confFromConfigService = loadInternal(pid);
         if(confFromConfigService.isEmpty() || !equalsWithoutRevision(props, confFromConfigService.get())) {
@@ -118,23 +105,15 @@ public class CmPersistenceManager implements PersistenceManager {
     @Override
     public void delete(final String pid) throws IOException {
         ensureCallbacksHaveBeenRegistered();
-        if (shouldDelegate(pid)) {
-            delegate.delete(pid);
-            return; // nothing to do for us
-        }
-        LOG.warn("Deletion is not supported. Will ignore it for pid={}", pid);
-    }
-
-    private boolean shouldDelegate(final String pid) {
-        return !MigratedServices.isMigrated(pid);
+        this.configService.unregisterConfiguration(pid, CONFIG_ID); // TODO: Patrick do we want to allow that?
     }
 
     private void ensureCallbacksHaveBeenRegistered() {
         if (callbacksRegistered.get()) {
-            return; // already done
+            return; // registration already done
         }
         if (callbacksRegistered.compareAndSet(false, true)) {
-            registerCallbacksForConfigChanges.run();
+            registerCallbacksForConfigChanges.run(); // do register
         }
     }
 

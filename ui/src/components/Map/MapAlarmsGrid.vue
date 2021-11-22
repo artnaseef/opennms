@@ -74,7 +74,6 @@ let gridColumnApi: any = ref({});
 function onGridReady(params: any) {
   gridApi = params.api
   gridColumnApi = params.columnApi;
-  // sizeToFit()
   autoSizeAll(false);
 }
 
@@ -96,7 +95,7 @@ watch(
 )
 
 function getAlarmsFromSelectedNodes() {
-  let alarms = store.getters['mapModule/getAlarmsFromSelectedNodes'];
+  let alarms: Alarm[] = store.getters['mapModule/getAlarmsFromSelectedNodes'];
   return alarms.map((alarm: Alarm) => ({
     id: +alarm.id,
     severity: alarm.severity,
@@ -108,9 +107,9 @@ function getAlarmsFromSelectedNodes() {
   }));
 }
 
-const alarmOptions = ref(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+const alarmOptions = ref<string[]>(["Not Selected", "Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
-let alarmOption = ref(alarmOptions.value[0]);
+let alarmOption = ref<string>(alarmOptions.value[0]);
 
 watch(
   () => [alarmOption.value],
@@ -141,9 +140,9 @@ watch(
         break;
     }
 
-    let numFail = 0;
+    let numFail: number = 0;
     let respCollection: any = [];
-    selectedAlarmIds.forEach((alarmId: string) => {
+    selectedAlarmIds.value.forEach((alarmId: string) => {
       let resp = store.dispatch("mapModule/modifyAlarm", {
         pathVariable: alarmId, queryParameters: alarmQueryParameters
       })
@@ -155,7 +154,7 @@ watch(
           numFail = numFail + 1;
         }
       })
-      GStore.flashMessage = (selectedAlarmIds.length - numFail) + " success, " + numFail + ' failed.'
+      GStore.flashMessage = (selectedAlarmIds.value.length - numFail) + " success, " + numFail + ' failed.'
 
       setTimeout(() => {
         GStore.flashMessage = ''
@@ -165,16 +164,16 @@ watch(
   }
 )
 
-const GStore: any = inject('GStore');
+const GStore = inject<any>('GStore');
 
-let selectedAlarmIds: any = ref([]);
+let selectedAlarmIds= ref<string[]>([]);
 
-let hasAlarmSelected: any = ref(false);
+let hasAlarmSelected = ref<boolean>(false);
 
 function onSelectionChanged() {
   let selectedRows = gridApi.getSelectedNodes().map((node: any) => node.data);
-  selectedAlarmIds = selectedRows.map((alarm: any) => alarm.id);
-  hasAlarmSelected.value = selectedAlarmIds.length > 0;
+  selectedAlarmIds.value = selectedRows.map((alarm: any) => alarm.id);
+  hasAlarmSelected.value = selectedAlarmIds.value.length > 0;
 }
 
 function clearFilters() {
@@ -182,7 +181,7 @@ function clearFilters() {
 }
 
 function applyFilters() {
-  let nodesLabel: any = [];
+  let nodesLabel: string[] = [];
   gridApi.forEachNodeAfterFilter((node: any) => {
     nodesLabel.push(node.data.node);
   });

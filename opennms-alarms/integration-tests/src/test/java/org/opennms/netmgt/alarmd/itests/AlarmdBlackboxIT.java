@@ -44,11 +44,16 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.alarms.driver.Scenario;
 import org.opennms.core.test.alarms.driver.ScenarioResults;
 import org.opennms.core.test.alarms.driver.State;
+import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.model.OnmsSeverity;
+import org.opennms.test.JUnitConfigurationEnvironment;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * This test suite allows us to:
@@ -62,6 +67,18 @@ import org.opennms.netmgt.model.OnmsSeverity;
  *
  * @author jwhite
  */
+@RunWith(OpenNMSJUnit4ClassRunner.class)
+@ContextConfiguration(locations={
+        "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        //"classpath:/META-INF/opennms/applicationContext-mockDao.xml",
+        "classpath:/META-INF/opennms/applicationContext-commonConfigs.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
+        //"classpath:/META-INF/opennms/applicationContext-rest-mappers.xml",
+        "classpath*:/META-INF/opennms/component-dao.xml",
+        "classpath:/META-INF/opennms/applicationContext-config-service.xml"
+})
+@JUnitConfigurationEnvironment
+@JUnitTemporaryDatabase
 public class AlarmdBlackboxIT {
 
     /**

@@ -15,7 +15,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>del</module>
-        <module>int</module>
+        <module>cm</module>
     </modules>
     <dependencyManagement>
     <dependencies>

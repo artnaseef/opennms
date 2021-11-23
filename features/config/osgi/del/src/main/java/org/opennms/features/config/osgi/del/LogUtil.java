@@ -26,17 +26,20 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.features.config.osgi;
-import java.util.Set;
+package org.opennms.features.config.osgi.del;
 
-// TODO: Patrick: find a better solution, e.g. read all available PIDs dynamically from CM.
-// TODO: Patrick: keep MigratedServices between 2 projects in sync
-public class MigratedServices {
-    final static Set<String> PIDS =  Set.of(
-            "org.opennms.features.datachoices"
-    );
+// import org.apache.felix.cm.impl.Log;
 
-    public static boolean isMigrated(final String pid) {
-        return PIDS.contains(pid);
+public class LogUtil {
+    public static void logInfo(String msg, Object...objects) {
+        // Log.logger.log( LogService.LOG_INFO, "{0} stopped.", objects);
+    }
+
+    private interface LogService {
+        // values from org.osgi.service.log.LogService
+        int LOG_ERROR = 1;
+        int LOG_WARNING = 2;
+        int LOG_INFO = 3;
+        int LOG_DEBUG = 4;
     }
 }

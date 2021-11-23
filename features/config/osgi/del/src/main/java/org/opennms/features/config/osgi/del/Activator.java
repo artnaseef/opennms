@@ -28,10 +28,11 @@
 
 package org.opennms.features.config.osgi.del;
 
+import static org.opennms.features.config.osgi.del.LogUtil.logInfo;
+
 import java.util.Hashtable;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.impl.Log;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -44,13 +45,12 @@ public class Activator implements BundleActivator {
         Hashtable<String, Object> config = new Hashtable<>();
         config.put("name", CmPersistenceManagerDelegator.class.getName());
 
-        Log.logger.log( LogService.LOG_INFO, "Registering service {0}.", new Object[]{ CmPersistenceManagerDelegator.class.getSimpleName() } );
+        logInfo( "Registering service {0}.", CmPersistenceManagerDelegator.class.getSimpleName());
 
         CmPersistenceManagerDelegator persistenceManager = new CmPersistenceManagerDelegator(context);
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
-        Log.logger.log( LogService.LOG_INFO, "{0} started.", new Object[]
-                { CmPersistenceManagerDelegator.class.getSimpleName() } );
+        logInfo( "{0} started.", CmPersistenceManagerDelegator.class.getSimpleName());
     }
 
     @Override
@@ -58,15 +58,6 @@ public class Activator implements BundleActivator {
         if (registration != null) {
             registration.unregister();
         }
-        Log.logger.log( LogService.LOG_INFO, "{0} stopped.", new Object[]
-                { CmPersistenceManagerDelegator.class.getSimpleName() } );
-    }
-
-    private interface LogService {
-        // values from org.osgi.service.log.LogService
-        int LOG_ERROR = 1;
-        int LOG_WARNING = 2;
-        int LOG_INFO = 3;
-        int LOG_DEBUG = 4;
+        logInfo("{0} stopped.", CmPersistenceManagerDelegator.class.getSimpleName());
     }
 }

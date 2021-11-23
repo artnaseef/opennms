@@ -28,6 +28,7 @@
 
 package org.opennms.features.config.osgi.del;
 
+import org.apache.felix.cm.PersistenceManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,7 +37,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -44,18 +44,65 @@ import org.osgi.framework.InvalidSyntaxException;
  * Our own implementation of a PersistenceManager.
  * It delegates to ConfigurationManagerService for OpenNMS bundles
  * It delegates to FilePersistenceManager all other bundles
+ * It does lazy loading for the delegates, loading is deferred until they are actually needed.
  * Must be activated in custom.properties: felix.cm.pm=org.opennms.config.osgi.del.CmPersistenceManagerDelegator
  */
 public class CmPersistenceManagerDelegator implements PersistenceManager {
-
     private final BundleContext context;
-    private final PersistenceManager fileDelegate;
-    private PersistenceManager cmDelegate;
-    private final AtomicBoolean cmRegistered = new AtomicBoolean(false);
+
+    private final PersistenceManagerHolder cmManager = new PersistenceManagerHolder("org.opennms.features.config.osgi.CmPersistenceManager");
+    private final PersistenceManagerHolder fileManager = new PersistenceManagerHolder("org.apache.felix.cm.file.FilePersistenceManager");
 
     public CmPersistenceManagerDelegator(final BundleContext context) {
         this.context = context;
-        this.fileDelegate = findPersistenceManager("org.apache.felix.cm.file.FilePersistenceManager");
+    }
+
+    public boolean exists(final String pid) {
+        return getDelegate(pid).exists(pid);
+    }
+
+
+    public Enumeration getDictionaries() throws IOException {
+        List<Dictionary<String, String>> dictionaries = new ArrayList<>();
+        ensurePersistenceManagerIsAvailable(this.fileManager);
+        dictionaries.addAll(Collections.list(this.fileManager.persistenceManager.getDictionaries()));
+        if (this.cmManager.isLoaded.get()) {
+            dictionaries.addAll(Collections.list(this.cmManager.persistenceManager.getDictionaries()));
+        }
+        return Collections.enumeration(dictionaries);
+    }
+
+
+    public Dictionary load(String pid) throws IOException {
+        return getDelegate(pid).load(pid);
+    }
+
+
+    public void store(String pid, Dictionary props) throws IOException {
+        getDelegate(pid).store(pid, props);
+    }
+
+
+    public void delete(final String pid) throws IOException {
+        getDelegate(pid).delete(pid);
+    }
+
+    /**
+     * Returns either the native FilePersistenceManger or CmPersistenceManager depending on the pid.
+     */
+    private PersistenceManager getDelegate(final String pid) {
+        PersistenceManagerHolder pm = MigratedServices.isMigrated(pid) ? this.cmManager : this.fileManager;
+        ensurePersistenceManagerIsAvailable(pm);
+        return pm.persistenceManager;
+    }
+
+    private void ensurePersistenceManagerIsAvailable(final PersistenceManagerHolder pm) {
+        if (pm.isLoaded.get()) {
+            return; // registration already done
+        }
+        if (pm.isLoaded.compareAndSet(false, true)) {
+            pm.persistenceManager = findPersistenceManager(pm.className);
+        }
     }
 
     private PersistenceManager findPersistenceManager(String className) {
@@ -71,55 +118,14 @@ public class CmPersistenceManagerDelegator implements PersistenceManager {
         }
     }
 
-    @Override
-    public boolean exists(final String pid) {
-        return getDelegate(pid).exists(pid);
-    }
+    private final static class PersistenceManagerHolder {
+        final AtomicBoolean isLoaded = new AtomicBoolean(false);
+        PersistenceManager persistenceManager;
+        final String className;
 
-    @Override
-    public Enumeration getDictionaries() throws IOException {
-        List<Dictionary<String, String>> dictionaries = new ArrayList<>();
-        dictionaries.addAll(Collections.list(fileDelegate.getDictionaries()));
-        if (this.cmRegistered.get()) {
-            dictionaries.addAll(Collections.list(cmDelegate.getDictionaries()));
-        }
-        return Collections.enumeration(dictionaries);
-    }
-
-    @Override
-    public Dictionary load(String pid) throws IOException {
-        return getDelegate(pid).load(pid);
-    }
-
-    @Override
-    public void store(String pid, Dictionary props) throws IOException {
-        getDelegate(pid).store(pid, props);
-    }
-
-    @Override
-    public void delete(final String pid) throws IOException {
-        getDelegate(pid).delete(pid);
-    }
-
-    /**
-     * Returns either the native FilePersistenceManger or CmPersistenceManager depending on the pid.
-     */
-    private PersistenceManager getDelegate(final String pid) {
-        if (MigratedServices.isMigrated(pid)) {
-            ensureCmIsAvailable();
-            return this.cmDelegate;
-        } else {
-            return this.fileDelegate;
+        PersistenceManagerHolder(String className) {
+            this.className = className;
         }
     }
 
-    private void ensureCmIsAvailable() {
-        if (cmRegistered.get()) {
-            return; // registration already done
-        }
-        // TODO: Patrick: do we need to ensure here against concurrency? (are bundles loaded in parallel?)
-        if (cmRegistered.compareAndSet(false, true)) {
-            this.cmDelegate = findPersistenceManager("org.opennms.features.config.osgi.CmPersistenceManager");
-        }
-    }
 }

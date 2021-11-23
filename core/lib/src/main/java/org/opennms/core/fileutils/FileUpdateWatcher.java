@@ -84,7 +84,7 @@ public class FileUpdateWatcher {
                 try {
                     key = watcher.take();
                 } catch (Exception e) {
-                    LOG.info("Watcher is either interruped or closed", e);
+                    LOG.info("Watcher is either interrupted or closed", e);
                     break;
                 }
 

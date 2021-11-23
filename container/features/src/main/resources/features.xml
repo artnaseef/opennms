@@ -1800,10 +1800,13 @@
         <bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxp-api-1.4/${servicemixSpecsVersion}</bundle>
         <bundle>mvn:org.opennms.features.config.rest/org.opennms.features.config.rest.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.config.rest/org.opennms.features.config.rest.impl/${project.version}</bundle>
-        <!-- osgi bundles will be loaded already in startup process -->
-        <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.del/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.int/${project.version}</bundle>
     </feature>
+    <feature name="opennms-config-management" description="OpenNMS :: Features :: Config" version="${project.version}">
+        <!-- del bundle will be loaded already in startup process, see startup.properties -->
+        <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.del/${project.version}</bundle>
+        <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.cm/${project.version}</bundle>
+    </feature>
+
     <feature name="opennms-timeseries-shell" version="${project.version}" description="OpenNMS :: Features :: Timeseries :: Shell Commands">
         <bundle>mvn:org.opennms.features/org.opennms.features.timeseries.shell/${project.version}</bundle>
     </feature>

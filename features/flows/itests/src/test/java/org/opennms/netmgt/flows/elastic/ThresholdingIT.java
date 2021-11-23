@@ -52,6 +52,7 @@ import org.opennms.features.jest.client.RestClientFactory;
 import org.opennms.features.jest.client.index.IndexStrategy;
 import org.opennms.features.jest.client.template.IndexSettings;
 import org.opennms.netmgt.collectd.DefaultResourceTypeMapper;
+import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.collection.core.DefaultCollectionAgentFactory;
 import org.opennms.netmgt.config.dao.thresholding.api.OverrideableThreshdDao;
 import org.opennms.netmgt.config.dao.thresholding.api.OverrideableThresholdingDao;
@@ -130,6 +131,9 @@ public class ThresholdingIT {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Autowired
+    private PersisterFactory persisterFactory;
+
     @Before
     public void before() {
         this.applicationContext.getAutowireCapableBeanFactory().createBean(DefaultResourceTypeMapper.class);
@@ -207,6 +211,7 @@ public class ThresholdingIT {
                 .build();
         final var thresholding = new FlowThresholding(this.thresholdingService,
                                                       collectionAgentFactory,
+                                                      this.persisterFactory,
                                                       this.databasePopulator.getIpInterfaceDao(),
                                                       sessionCacheConfig);
 

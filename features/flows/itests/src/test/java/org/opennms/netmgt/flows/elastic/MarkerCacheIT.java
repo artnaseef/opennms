@@ -184,7 +184,7 @@ public class MarkerCacheIT {
             Assert.assertThat(nodeDao.findAllHavingFlows(), is(empty()));
             Assert.assertThat(snmpInterfaceDao.findAllHavingFlows(1), is(empty()));
 
-            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.INGRESS)), getMockFlowSource());
+            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.INGRESS)), getMockFlowSource(), );
 
             Assert.assertThat(nodeDao.findAllHavingFlows(), contains(hasProperty("id", is(1))));
             Assert.assertThat(snmpInterfaceDao.findAllHavingFlows(1), contains(
@@ -228,7 +228,7 @@ public class MarkerCacheIT {
             Assert.assertThat(nodeDao.findAllHavingFlows(), is(empty()));
             Assert.assertThat(snmpInterfaceDao.findAllHavingFlows(1), is(empty()));
 
-            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.EGRESS)), getMockFlowSource());
+            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.EGRESS)), getMockFlowSource(), );
 
             assertEquals(0, snmpInterfaceDao.findAllHavingIngressFlows(2).size());
             assertEquals(0, snmpInterfaceDao.findAllHavingEgressFlows(2).size());
@@ -280,13 +280,13 @@ public class MarkerCacheIT {
             expectEgressInterfaces();
 
             // persist ingress flow
-            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.INGRESS)), getMockFlowSource());
+            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.INGRESS)), getMockFlowSource(), );
             expectAllInterfaces(ingress);
             expectIngressInterfaces(ingress);
             expectEgressInterfaces();
 
             // persist egress flow
-            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.EGRESS)), getMockFlowSource());
+            elasticFlowRepository.persist(Lists.newArrayList(getMockFlow(Flow.Direction.EGRESS)), getMockFlowSource(), );
             expectAllInterfaces(ingress, egress);
             expectEgressInterfaces(egress);
             expectIngressInterfaces(ingress);

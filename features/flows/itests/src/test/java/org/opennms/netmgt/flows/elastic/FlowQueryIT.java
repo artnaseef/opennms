@@ -1050,7 +1050,7 @@ public class FlowQueryIT {
 
     private void loadFlows(final List<FlowDocument> flowDocuments) throws FlowException {
         final List<Flow> flows = flowDocuments.stream().map(TestFlow::new).collect(Collectors.toList());
-        flowRepository.persist(flows, new FlowSource("test", "127.0.0.1", null));
+        flowRepository.persist(flows, new FlowSource("test", "127.0.0.1", null), );
 
         // Retrieve all the flows we just persisted
         await().atMost(60, TimeUnit.SECONDS).until(() -> smartQueryService.getFlowCount(Collections.singletonList(

@@ -132,7 +132,7 @@ public class KafkaFlowForwarderIT {
                     new MockSessionUtils(), new MockNodeDao(), new MockSnmpInterfaceDao(),
                     new MockIdentity(), new MockTracerRegistry(), flowForwarder, new IndexSettings(), null);
             elasticFlowRepository.setEnableFlowForwarding(true);
-            elasticFlowRepository.persist(Lists.newArrayList(FlowDocumentTest.getMockFlow()), FlowDocumentTest.getMockFlowSource());
+            elasticFlowRepository.persist(Lists.newArrayList(FlowDocumentTest.getMockFlow()), FlowDocumentTest.getMockFlowSource(), );
         }
         KafkaConsumerRunner kafkaConsumerRunner = new KafkaConsumerRunner(kafkaConfig, topicName);
         Executors.newSingleThreadExecutor().execute(kafkaConsumerRunner);

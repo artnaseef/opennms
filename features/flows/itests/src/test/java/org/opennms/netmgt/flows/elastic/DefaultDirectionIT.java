@@ -102,7 +102,7 @@ public class DefaultDirectionIT {
                             new MockIdentity(), new MockTracerRegistry(), new MockDocumentForwarder(), new IndexSettings(), null), jestClient);
             // persist data
             elasticFlowRepository.persist(Lists.newArrayList(getMockFlowWithoutDirection()),
-                    FlowDocumentTest.getMockFlowSource());
+                    FlowDocumentTest.getMockFlowSource(), );
 
             // wait for entries to show up
             with().pollInterval(5, SECONDS).await().atMost(1, MINUTES).until(() -> {

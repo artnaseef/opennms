@@ -81,7 +81,7 @@ public class ElasticFlowRepositoryRetryIT {
         // try persisting data
         apply((repository) -> repository.persist(
                 Lists.newArrayList(FlowDocumentTest.getMockFlow()),
-                FlowDocumentTest.getMockFlowSource()));
+                FlowDocumentTest.getMockFlowSource(), ));
     }
 
     private void apply(FlowRepositoryConsumer consumer) throws Exception {

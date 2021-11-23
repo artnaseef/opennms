@@ -833,7 +833,7 @@ public class AggregatedFlowQueryIT {
             flow.setFlow(testFlow);
             flows.add(testFlow);
         }
-        flowRepository.persist(flows, new FlowSource("test", "127.0.0.1", null));
+        flowRepository.persist(flows, new FlowSource("test", "127.0.0.1", null), );
 
         // Retrieve all the flows we just persisted
         await().atMost(60, TimeUnit.SECONDS).until(() -> rawFlowQueryService.getFlowCount(Collections.singletonList(

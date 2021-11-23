@@ -111,7 +111,7 @@ public class BulkingIT {
             final long[] persists = new long[2];
 
             // send full bulk in order to estimate last persist
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource(), );
 
             with().pollInterval(25, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {
                 final SearchResult searchResult = jestClient.execute(new Search.Builder("").addIndex("netflow-*").build());
@@ -122,9 +122,9 @@ public class BulkingIT {
             });
 
             // send small bulks
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource());
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource());
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource(), );
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource(), );
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(30)), FlowDocumentTest.getMockFlowSource(), );
 
             // these 90 flows should not be visible yet
             with().pollInterval(2, SECONDS).await().atMost(10, SECONDS).until(() -> {
@@ -164,7 +164,7 @@ public class BulkingIT {
             final MockDocumentEnricherFactory mockDocumentEnricherFactory = new MockDocumentEnricherFactory();
             final DocumentEnricher documentEnricher = mockDocumentEnricherFactory.getEnricher();
             final FlowRepository flowRepository = createFlowRepository(jestClient, documentEnricher, 1000, 300000);
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource(), );
 
             // these results should appear immediately since the bulk size of 1000 was reached
             with().pollInterval(250, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {
@@ -192,7 +192,7 @@ public class BulkingIT {
             final DocumentEnricher documentEnricher = mockDocumentEnricherFactory.getEnricher();
             final FlowRepository flowRepository = createFlowRepository(jestClient, documentEnricher, 1000, 300000);
 
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(1000)), FlowDocumentTest.getMockFlowSource(), );
 
             // these results should appear immediately since the bulk size of 1000 was reached
             with().pollInterval(250, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {
@@ -201,7 +201,7 @@ public class BulkingIT {
                 return SearchResultUtils.getTotal(searchResult) == 1000L;
             });
 
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(500)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(500)), FlowDocumentTest.getMockFlowSource(), );
 
             // these results should not appear immediately since the bulk size is only 500
             with().pollInterval(250, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {
@@ -210,7 +210,7 @@ public class BulkingIT {
                 return SearchResultUtils.getTotal(searchResult) == 1000L;
             });
 
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(400)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(400)), FlowDocumentTest.getMockFlowSource(), );
 
             // these results should not appear immediately since the bulk size is only 900
             with().pollInterval(250, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {
@@ -219,7 +219,7 @@ public class BulkingIT {
                 return SearchResultUtils.getTotal(searchResult) == 1000L;
             });
 
-            flowRepository.persist(Lists.newArrayList(createMockedFlows(100)), FlowDocumentTest.getMockFlowSource());
+            flowRepository.persist(Lists.newArrayList(createMockedFlows(100)), FlowDocumentTest.getMockFlowSource(), );
 
             // these results should now appear immediately since the bulk size of 1000 was reached
             with().pollInterval(250, MILLISECONDS).await().atMost(10, SECONDS).until(() -> {

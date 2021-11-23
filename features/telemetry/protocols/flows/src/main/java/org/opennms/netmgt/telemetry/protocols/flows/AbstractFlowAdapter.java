@@ -132,7 +132,7 @@ public abstract class AbstractFlowAdapter<P> implements Adapter {
             final FlowSource source = new FlowSource(messageLog.getLocation(),
                     messageLog.getSourceAddress(),
                     contextKey);
-            flowRepository.persist(flows, source);
+            flowRepository.persist(flows, source, );
         } catch (DetailedFlowException ex) {
             LOG.error("Error while persisting flows: {}", ex.getMessage(), ex);
             for (final String logMessage: ex.getDetailedLogMessages()) {

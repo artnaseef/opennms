@@ -43,12 +43,14 @@ import org.opennms.core.cache.CacheBuilder;
 import org.opennms.core.cache.CacheConfig;
 import org.opennms.netmgt.collection.api.CollectionAgent;
 import org.opennms.netmgt.collection.api.CollectionAgentFactory;
+import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.collection.support.builder.CollectionSetBuilder;
 import org.opennms.netmgt.collection.support.builder.DeferredGenericTypeResource;
 import org.opennms.netmgt.collection.support.builder.NodeLevelResource;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.flows.api.FlowSource;
+import org.opennms.netmgt.flows.api.ProcessingOptions;
 import org.opennms.netmgt.flows.elastic.Direction;
 import org.opennms.netmgt.flows.elastic.FlowDocument;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -68,11 +70,13 @@ public class FlowThresholding {
 
     public static final String SERVICE_NAME = "Flow-Threshold";
     public static final String RESOURCE_TYPE_NAME = "flowApp";
+    public static final String RESOURCE_GROUP = "application";
 
     private final static RrdRepository FLOW_APP_RRD_REPO = new RrdRepository();
 
     private final ThresholdingService thresholdingService;
     private final CollectionAgentFactory collectionAgentFactory;
+    private final PersisterFactory persisterFactory;
 
     private final IpInterfaceDao ipInterfaceDao;
 
@@ -84,12 +88,16 @@ public class FlowThresholding {
 
     private Timer timer;
 
+    private boolean persistenceEnabled = false;
+
     public FlowThresholding(final ThresholdingService thresholdingService,
                             final CollectionAgentFactory collectionAgentFactory,
+                            final PersisterFactory persisterFactory,
                             final IpInterfaceDao ipInterfaceDao,
                             final CacheConfig sessionCacheConfig) {
         this.thresholdingService = Objects.requireNonNull(thresholdingService);
         this.collectionAgentFactory = Objects.requireNonNull(collectionAgentFactory);
+        this.persisterFactory = Objects.requireNonNull(persisterFactory);
 
         this.ipInterfaceDao = Objects.requireNonNull(ipInterfaceDao);
 
@@ -162,17 +170,38 @@ public class FlowThresholding {
                 continue;
             }
 
+            final var nodeResource = new NodeLevelResource(iface.getNodeId());
+            final var appResource = new DeferredGenericTypeResource(nodeResource, RESOURCE_TYPE_NAME, String.format("%s:%s",
+                                                                                                                    applicationKey.iface, // TODO cpape: Find interface name
+                                                                                                                    entry.getKey().application));
+
+            final CollectionSetBuilder collectionSetBuilder = new CollectionSetBuilder(session.collectionAgent)
+                    .withTimestamp(timerTaskDate)
+                    .withCounter(appResource,
+                                 RESOURCE_GROUP,
+                                 document.getDirection() == Direction.INGRESS
+                                 ? "bytesIn"
+                                 : "bytesOut",
+                                 entry.getValue().get())
+                    .withStringAttribute(appResource,
+                                         RESOURCE_GROUP,
+                                         "application",
+                                         entry.getKey().application);
+
+            // TODO fooker: Set sequence number from flow to aid distributed thresholding
+
+            final var collectionSet = collectionSetBuilder.build();
+
+            if (this.persistenceEnabled) {
+                collectionSet.visit(this.persisterFactory.createPersister(new ServiceParameters(Collections.emptyMap()),
+                                                                          FLOW_APP_RRD_REPO,
+                                                                          false,
+                                                                          false,
+                                                                          true));
+            }
+
             try {
-                final NodeLevelResource nodeResource = new NodeLevelResource(iface.getNodeId());
-                final DeferredGenericTypeResource appResource = new DeferredGenericTypeResource(nodeResource, RESOURCE_TYPE_NAME, entry.getKey().application);
-
-                final CollectionSetBuilder collectionSetBuilder = new CollectionSetBuilder(session.collectionAgent)
-                        .withTimestamp(timerTaskDate)
-                        .withCounter(appResource, entry.getKey().application, "bytes", entry.getValue().get());
-
-                // TODO fooker: Set sequence number from flow to aid distributed thresholding
-
-                session.thresholdingSession.accept(collectionSetBuilder.build());
+                session.thresholdingSession.accept(collectionSet);
             } catch (ThresholdInitializationException e) {
                 LOG.warn("Error initializing thresholding session", e);
             }
@@ -180,7 +209,8 @@ public class FlowThresholding {
     }
 
     public void threshold(final List<FlowDocument> documents,
-                          final FlowSource source) throws ExecutionException, ThresholdInitializationException {
+                          final FlowSource source,
+                          final ProcessingOptions options) throws ExecutionException, ThresholdInitializationException {
 
         for (final var document : documents) {
             if (document.getNodeExporter() != null && !Strings.isNullOrEmpty(document.getApplication())) {
@@ -195,6 +225,14 @@ public class FlowThresholding {
                 this.applicationAccumulator.computeIfAbsent(applicationKey, k -> new AtomicLong(0)).addAndGet(document.getBytes());
             }
         }
+    }
+
+    public boolean isPersistenceEnabled() {
+        return this.persistenceEnabled;
+    }
+
+    public void setPersistenceEnabled(final boolean persistenceEnabled) {
+        this.persistenceEnabled = persistenceEnabled;
     }
 
     private static class Session {

@@ -65,7 +65,7 @@ public class CmPersistenceManager implements PersistenceManager {
 
     @Override
     public Enumeration getDictionaries() {
-        List<Dictionary<String, String>> dictionaries = MigratedServices.PIDS.stream()
+        List<Dictionary<String, Object>> dictionaries = MigratedServices.PIDS.stream()
                 .map(this::loadInternal)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -79,7 +79,7 @@ public class CmPersistenceManager implements PersistenceManager {
                 .orElse(new Hashtable());
     }
 
-    private Optional<Dictionary<String, String>> loadInternal(String pid) {
+    private Optional<Dictionary<String, Object>> loadInternal(String pid) {
         return configService.getJSONStrConfiguration(pid, CONFIG_ID)
                 .map(JSONObject::new)
                 .map(DictionaryUtil::createFromJson);
@@ -87,7 +87,7 @@ public class CmPersistenceManager implements PersistenceManager {
 
     @Override
     public void store(String pid, Dictionary props) throws IOException {
-        Optional<Dictionary<String, String>> confFromConfigService = loadInternal(pid);
+        Optional<Dictionary<String, Object>> confFromConfigService = loadInternal(pid);
         if(confFromConfigService.isEmpty() || !equalsWithoutRevision(props, confFromConfigService.get())) {
             configService.updateConfiguration(new ConfigKey(pid, CONFIG_ID), new JsonAsString(DictionaryUtil.writeToJson(props).toString()));
         }
@@ -98,7 +98,7 @@ public class CmPersistenceManager implements PersistenceManager {
         this.configService.unregisterConfiguration(pid, CONFIG_ID); // TODO: Patrick do we want to allow delete?
     }
 
-    public static boolean equalsWithoutRevision(Dictionary<String, String> a, Dictionary<String, String> b) {
+    public static boolean equalsWithoutRevision(Dictionary<String, Object> a, Dictionary<String, Object> b) {
         if (a == null && b == null) {
             return true;
         } else if (a == null || b == null) {

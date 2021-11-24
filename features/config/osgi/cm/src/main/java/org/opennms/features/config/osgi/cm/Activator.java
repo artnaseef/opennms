@@ -31,6 +31,7 @@ package org.opennms.features.config.osgi.cm;
 import static org.opennms.features.config.osgi.cm.LogUtil.logInfo;
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Optional;
 
@@ -61,20 +62,42 @@ public class Activator implements BundleActivator {
         CmPersistenceManager persistenceManager = new CmPersistenceManager(cm);
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
+        final ConfigurationAdmin configurationAdmin = findService(context, ConfigurationAdmin.class);
+        primeConfigurationAdmin(configurationAdmin, persistenceManager);
+        registerCallbacks(context, cm, persistenceManager);
+
+        logInfo("{0} started.", CmPersistenceManager.class.getSimpleName());
+    }
+
+    /**
+     * We are started late (after org.osgi.service.cm.ConfigurationAdmin) in the startup sequence.
+     * Therefore, ConfigurationAdmin (which caches configs) doesn't know about our configs.
+     * Let's tell him.
+     */
+    private void primeConfigurationAdmin(ConfigurationAdmin configurationAdmin, PersistenceManager persistenceManager) {
+        for (String pid : MigratedServices.PIDS) {
+            updateConfig(configurationAdmin, persistenceManager, pid);
+        }
+    }
+
+    private void registerCallbacks(BundleContext context, ConfigurationManagerService cm, PersistenceManager persistenceManager) {
         // Register callbacks
         final ConfigurationAdmin configurationAdmin = findService(context, ConfigurationAdmin.class);
         for (String pid : MigratedServices.PIDS) {
             ConfigKey key = new ConfigKey(pid, "default");
-            cm.registerReloadConsumer(key, k -> {
-                try {
-                    configurationAdmin.getConfiguration(k.getConfigName()).update();
-                } catch (IOException e) {
-                    logInfo("Cannot register callback from pid=" + pid, e );
-                }
-            });
+            cm.registerReloadConsumer(key, k -> updateConfig(configurationAdmin, persistenceManager, pid));
         }
+    }
 
-        logInfo("{0} started.", CmPersistenceManager.class.getSimpleName());
+    private void updateConfig(ConfigurationAdmin configurationAdmin, PersistenceManager persistenceManager, String pid) {
+        try {
+            Dictionary fromCM = persistenceManager.load(pid);
+            configurationAdmin
+                    .getConfiguration(pid)
+                    .updateIfDifferent(fromCM); // TODO: Patrick: this doesn't seem to work!
+        } catch (IOException e) {
+            logInfo("Cannot load configuration for pid=" + pid, e );
+        }
     }
 
     private <T> T findService(BundleContext context, Class<T> clazz) {

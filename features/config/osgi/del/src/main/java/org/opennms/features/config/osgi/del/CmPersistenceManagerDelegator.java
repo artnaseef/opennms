@@ -28,6 +28,7 @@
 
 package org.opennms.features.config.osgi.del;
 
+import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ import org.osgi.framework.InvalidSyntaxException;
  * It does lazy loading for the delegates, loading is deferred until they are actually needed.
  * Must be activated in custom.properties: felix.cm.pm=org.opennms.config.osgi.del.CmPersistenceManagerDelegator
  */
-public class CmPersistenceManagerDelegator implements PersistenceManager {
+public class CmPersistenceManagerDelegator implements NotCachablePersistenceManager {
     private final BundleContext context;
 
     private final PersistenceManagerHolder cmManager = new PersistenceManagerHolder("org.opennms.features.config.osgi.cm.CmPersistenceManager");

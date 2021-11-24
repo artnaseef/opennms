@@ -42,10 +42,6 @@ public class JsonAsString {
         this.json = json;
     }
 
-    public JsonAsString (final JSONObject json) {
-        this.json = json.toString();
-    }
-
     @Override
     public String toString() {
         return json;

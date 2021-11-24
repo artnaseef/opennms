@@ -129,7 +129,7 @@ public class ConfigManagerRestServiceImpl implements ConfigManagerRestService {
         try {
             Optional<String> jsonStr = configurationManagerService.getJSONStrConfiguration(configName, configId);
             if(jsonStr.isPresent()) {
-                return Response.ok(jsonStr).build();
+                return Response.ok(jsonStr.get()).build();
             } else  {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }

@@ -61,7 +61,7 @@ public class PropertiesConversionUtil {
             }
             json.put(entry.getKey().toString(), value);
         }
-        return new JsonAsString(json);
+        return new JsonAsString(json.toString());
     }
 
 }

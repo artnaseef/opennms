@@ -81,7 +81,7 @@ public class PropertiesCacheWithCm {
     }
 
     private Properties read() {
-      Optional<Map<String, String>> result = this.cm.getJSONStrConfiguration(configKey.getConfigName(), configKey.getConfigName())
+      Optional<Map<String, String>> result = this.cm.getJSONStrConfiguration(configKey.getConfigName(), configKey.getConfigId())
               .map(PropertiesConversionUtil::jsonToMap);
       if (result.isEmpty()) {
         return null;

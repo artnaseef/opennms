@@ -1801,7 +1801,7 @@
         <bundle>mvn:org.opennms.features.config.rest/org.opennms.features.config.rest.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.config.rest/org.opennms.features.config.rest.impl/${project.version}</bundle>
     </feature>
-    <feature name="opennms-config-management" description="OpenNMS :: Features :: Config" version="${project.version}">
+    <feature name="opennms-config-management-osgi" description="OpenNMS :: Features :: Config :: Osgi" version="${project.version}">
         <!-- del bundle will be loaded already in startup process, see startup.properties -->
         <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.del/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.config.osgi/org.opennms.features.config.osgi.cm/${project.version}</bundle>

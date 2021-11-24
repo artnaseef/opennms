@@ -50,7 +50,7 @@ import org.osgi.framework.InvalidSyntaxException;
 public class CmPersistenceManagerDelegator implements PersistenceManager {
     private final BundleContext context;
 
-    private final PersistenceManagerHolder cmManager = new PersistenceManagerHolder("org.opennms.features.config.osgi.CmPersistenceManager");
+    private final PersistenceManagerHolder cmManager = new PersistenceManagerHolder("org.opennms.features.config.osgi.cm.CmPersistenceManager");
     private final PersistenceManagerHolder fileManager = new PersistenceManagerHolder("org.apache.felix.cm.file.FilePersistenceManager");
 
     public CmPersistenceManagerDelegator(final BundleContext context) {

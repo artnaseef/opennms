@@ -53,24 +53,18 @@ public class CmPersistenceManager implements PersistenceManager {
     private final static String CONFIG_ID = "default"; // TODO: Patrick deal with services with multiple configurations
 
     private final ConfigurationManagerService configService;
-    private final Runnable registerCallbacksForConfigChanges;
-    private final AtomicBoolean callbacksRegistered = new AtomicBoolean(false);
 
-    public CmPersistenceManager(final ConfigurationManagerService configService,
-                                final Runnable registerCallbacksForConfigChanges) {
+    public CmPersistenceManager(final ConfigurationManagerService configService) {
         this.configService = configService;
-        this.registerCallbacksForConfigChanges = registerCallbacksForConfigChanges;
     }
 
     @Override
     public boolean exists(final String pid) {
-        ensureCallbacksHaveBeenRegistered();
         return configService.getJSONConfiguration(pid, CONFIG_ID).isPresent();
     }
 
     @Override
     public Enumeration getDictionaries() {
-        ensureCallbacksHaveBeenRegistered();
         List<Dictionary<String, String>> dictionaries = MigratedServices.PIDS.stream()
                 .map(this::loadInternal)
                 .filter(Optional::isPresent)
@@ -81,7 +75,6 @@ public class CmPersistenceManager implements PersistenceManager {
 
     @Override
     public Dictionary load(String pid) {
-        ensureCallbacksHaveBeenRegistered();
         return loadInternal(pid)
                 .orElse(new Hashtable());
     }
@@ -94,27 +87,15 @@ public class CmPersistenceManager implements PersistenceManager {
 
     @Override
     public void store(String pid, Dictionary props) throws IOException {
-        ensureCallbacksHaveBeenRegistered();
-
         Optional<Dictionary<String, String>> confFromConfigService = loadInternal(pid);
         if(confFromConfigService.isEmpty() || !equalsWithoutRevision(props, confFromConfigService.get())) {
-            configService.updateConfiguration(new ConfigKey(pid, CONFIG_ID), new JsonAsString(DictionaryUtil.writeToJson(props)));
+            configService.updateConfiguration(new ConfigKey(pid, CONFIG_ID), new JsonAsString(DictionaryUtil.writeToJson(props).toString()));
         }
     }
 
     @Override
     public void delete(final String pid) throws IOException {
-        ensureCallbacksHaveBeenRegistered();
-        this.configService.unregisterConfiguration(pid, CONFIG_ID); // TODO: Patrick do we want to allow that?
-    }
-
-    private void ensureCallbacksHaveBeenRegistered() {
-        if (callbacksRegistered.get()) {
-            return; // registration already done
-        }
-        if (callbacksRegistered.compareAndSet(false, true)) {
-            registerCallbacksForConfigChanges.run(); // do register
-        }
+        this.configService.unregisterConfiguration(pid, CONFIG_ID); // TODO: Patrick do we want to allow delete?
     }
 
     public static boolean equalsWithoutRevision(Dictionary<String, String> a, Dictionary<String, String> b) {

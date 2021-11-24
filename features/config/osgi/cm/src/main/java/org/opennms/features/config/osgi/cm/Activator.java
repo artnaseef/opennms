@@ -39,10 +39,8 @@ import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,42 +52,17 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
+
+        // Register CmPersistenceManager
         Hashtable<String, Object> config = new Hashtable<>();
         config.put("name", CmPersistenceManager.class.getName());
         LOG.info( "Registering service {}.", CmPersistenceManager.class.getSimpleName() );
-
-        // find cm
-        final ConfigurationManagerService cm = Optional.ofNullable(context.getServiceReference(ConfigurationManagerService.class))
-                .map(context::getService)
-                .orElseThrow(() -> new IllegalStateException("Cannot find " + ConfigurationManagerService.class.getName()));
-
-        // Create Runnable to register CallbacksForConfigChanges:
-        // We need to run this Runnable after the full registration of the CMPersistenceManager (after Activator.start() is fully finished)
-        // otherwise ConfigAdmin might not find CmPersistenceManager
-        // thus we execute the registration the first time a method on CmPersistenceManager is called => at that time it is fully registered
-        Runnable registerCallbacksForConfigChanges = () -> registerCallbacksForConfigChanges(context, cm);
-        CmPersistenceManager persistenceManager = new CmPersistenceManager(cm, registerCallbacksForConfigChanges);
-
-        // register our CmPersistenceManager (instead of FilePersistenceManager)
+        final ConfigurationManagerService cm = findService(context, ConfigurationManagerService.class);
+        CmPersistenceManager persistenceManager = new CmPersistenceManager(cm);
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
-        logInfo("{0} started.", CmPersistenceManager.class.getSimpleName());
-    }
-
-    private void registerCallbacksForConfigChanges(BundleContext context, ConfigurationManagerService cm)  {
-        // Find ConfigurationAdmin;
-        final ConfigurationAdmin configurationAdmin;
-        try {
-            configurationAdmin = context.getServiceReferences(ConfigurationAdmin.class, null)
-                    .stream()
-                    .map(context::getService)
-                    .findAny()
-                    .orElseThrow(() -> new IllegalStateException("Cannot find " + PersistenceManager.class.getName()));
-        } catch (InvalidSyntaxException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Register all callbacks for config changes
+        // Register callbacks
+        final ConfigurationAdmin configurationAdmin = findService(context, ConfigurationAdmin.class);
         for (String pid : MigratedServices.PIDS) {
             ConfigKey key = new ConfigKey(pid, "default");
             cm.registerReloadConsumer(key, k -> {
@@ -100,6 +73,14 @@ public class Activator implements BundleActivator {
                 }
             });
         }
+
+        logInfo("{0} started.", CmPersistenceManager.class.getSimpleName());
+    }
+
+    private <T> T findService(BundleContext context, Class<T> clazz) {
+        return Optional.ofNullable(context.getServiceReference(clazz))
+                .map(context::getService)
+                .orElseThrow(() -> new IllegalStateException("Cannot find " + clazz.getName()));
     }
 
     @Override

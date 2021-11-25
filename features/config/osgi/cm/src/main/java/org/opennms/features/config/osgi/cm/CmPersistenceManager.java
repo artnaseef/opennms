@@ -35,11 +35,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.json.JSONObject;
 import org.opennms.features.config.service.api.ConfigKey;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.api.JsonAsString;
@@ -60,7 +58,7 @@ public class CmPersistenceManager implements PersistenceManager {
 
     @Override
     public boolean exists(final String pid) {
-        return configService.getJSONConfiguration(pid, CONFIG_ID).isPresent();
+        return configService.getJSONStrConfiguration(pid, CONFIG_ID).isPresent();
     }
 
     @Override
@@ -81,7 +79,7 @@ public class CmPersistenceManager implements PersistenceManager {
 
     private Optional<Dictionary<String, Object>> loadInternal(String pid) {
         return configService.getJSONStrConfiguration(pid, CONFIG_ID)
-                .map(JSONObject::new)
+                .map(s -> new JsonAsString(s))
                 .map(DictionaryUtil::createFromJson);
     }
 

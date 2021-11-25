@@ -94,7 +94,9 @@ public class Activator implements BundleActivator {
             Dictionary fromCM = persistenceManager.load(pid);
             configurationAdmin
                     .getConfiguration(pid)
-                    .updateIfDifferent(fromCM); // TODO: Patrick: this doesn't seem to work!
+                    .update();
+        // .update(fromCM);
+                    // .updateIfDifferent(fromCM); // TODO: Patrick: this doesn't seem to work!
         } catch (IOException e) {
             logInfo("Cannot load configuration for pid=" + pid, e );
         }

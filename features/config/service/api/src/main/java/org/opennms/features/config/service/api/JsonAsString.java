@@ -28,8 +28,6 @@
 
 package org.opennms.features.config.service.api;
 
-import org.json.JSONObject;
-
 import com.google.common.base.Objects;
 
 /**

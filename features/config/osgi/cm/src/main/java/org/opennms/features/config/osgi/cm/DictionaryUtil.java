@@ -34,16 +34,19 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.json.JSONObject;
+import org.opennms.features.config.service.api.JsonAsString;
 
+// TODO: Patrick: write test
 public class DictionaryUtil {
-    public static Dictionary createFromJson(JSONObject json) {
+
+    public static Dictionary createFromJson(JsonAsString json) {
         Objects.requireNonNull(json);
         Properties props = new Properties();
-        props.putAll(json.toMap());
+        props.putAll(new JSONObject(json.toString()).toMap());
         return props;
     }
 
-    public static JSONObject writeToJson(final Dictionary dictionary) {
+    public static JsonAsString writeToJson(final Dictionary dictionary) {
         Objects.requireNonNull(dictionary);
         JSONObject json = new JSONObject();
         Enumeration keys = dictionary.keys();
@@ -52,6 +55,33 @@ public class DictionaryUtil {
             Object value = dictionary.get(key);
             json.put(key.toString(), value);
         }
-        return json;
+        return new JsonAsString(json.toString());
     }
+/*
+
+
+        private static Gson GSON = new Gson();
+
+    public static Dictionary createFromJson(JsonAsString jsonAsString) {
+        Objects.requireNonNull(jsonAsString);
+        Map map = GSON.fromJson(jsonAsString.toString(), Map.class);
+        Properties props = new Properties();
+        props.putAll(map);
+        return props;
+    }
+
+    public static JsonAsString writeToJson(final Dictionary dictionary) {
+        Objects.requireNonNull(dictionary);
+        Map map = new HashMap();
+        Enumeration keys = dictionary.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = dictionary.get(key);
+            map.put(key.toString(), value);
+        }
+        String json = GSON.toJson(map);
+        return new JsonAsString(json);
+    }
+    */
+
 }

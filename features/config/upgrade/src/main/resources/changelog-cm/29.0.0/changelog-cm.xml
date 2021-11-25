@@ -30,4 +30,10 @@
         <cm:importConfig schemaId="jmx" configId="default" filePath="jmx-config.xml"/>
     </changeSet>
 
+    <changeSet author="psuthar" id="1.0-register-schema-snmp">
+        <cm:registerSchema id="snmp"/>
+        <cm:importSchemaFromXsd id="snmp" xsdFileName="snmp-config.xsd" xsdFileHash="731b7a0642261bc3b71d883e8bc36cfb3c4b41b3d2061b5ab972764729a2a689" rootElement="snmp-config"/>
+        <cm:importConfig schemaId="snmp" configId="default" filePath="snmp-config.xml"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -43,74 +43,75 @@
         <ValidationMessage :model="validationVar.threadpool.writeThreads"></ValidationMessage>
       </div>
       <div class="p-field p-col-2">
-        <Button
-          icon="pi pi-save"
-          label="Save"
+        <FeatherButton 
+          primary
           :disabled="
             validationVar.threadpool.writeThreads.$invalid ||
             validationVar.threadpool.scanThreads.$invalid ||
             validationVar.threadpool.rescanThreads.$invalid ||
             validationVar.threadpool.importThreads.$invalid
-          "
+            "
           @click="onSave()"
-        ></Button>
+        >
+          Save
+        </FeatherButton>
       </div>
     </div>
   </div>
-  </template>
+</template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import InputNumber from '../Common/InputNumber.vue'
-import Button from '../Common/Button.vue'
+import { FeatherButton } from '@featherds/button'
 import State from './formState'
 import ValidationMessage from '../Common/ValidationMessage.vue'
 import { useStore } from 'vuex'
 import { notify } from "@kyvg/vue3-notification"
 import { putProvisionDService } from "./../../services/configurationService"
 
-const store = useStore();
-const validationVar = State.toModel();
+const store = useStore()
+const validationVar = State.toModel()
 
-const onSave = () => {       
-  const provisionDService = store.state.configuration.provisionDService;
+const onSave = () => {
+  const provisionDService = store.state.configuration.provisionDService
   provisionDService.importThreads = validationVar.value.threadpool.importThreads.$model,
-  provisionDService.scanThreads = validationVar.value.threadpool.scanThreads.$model,
-  provisionDService.rescanThreads = validationVar.value.threadpool.rescanThreads.$model,
-  provisionDService.writeThreads = validationVar.value.threadpool.writeThreads.$model
+    provisionDService.scanThreads = validationVar.value.threadpool.scanThreads.$model,
+    provisionDService.rescanThreads = validationVar.value.threadpool.rescanThreads.$model,
+    provisionDService.writeThreads = validationVar.value.threadpool.writeThreads.$model
   // await store.commit('configuration/PUT_ProvisionDService', provisionDService);
   // await store.dispatch('configuration/putProvisionDService');
-  let response = putProvisionDService(provisionDService);
-  console.log(response);
-  try {    
+  let response = putProvisionDService(provisionDService)
+  console.log(response)
+  try {
     if (response != null) {
       notify({
-          title: "Notification",
-          text: 'Threadpool data successfully updated',
-          type: 'success',
-        });
+        title: "Notification",
+        text: 'Threadpool data successfully updated',
+        type: 'success',
+      })
     }
   } catch {
     notify({
-          title: "Notification",
-          text: 'ProvisionDService PUT API Error',
-          type: 'error',
-        });
+      title: "Notification",
+      text: 'ProvisionDService PUT API Error',
+      type: 'error',
+    })
   }
 }
 
 onMounted(async () => {
-  await store.dispatch('configuration/getProvisionDService');
+  await store.dispatch('configuration/getProvisionDService')
   try {
-    const provisionDService = store.state.configuration.provisionDService;
+    const provisionDService = store.state.configuration.provisionDService
     if (provisionDService != null) {
-      validationVar.value.threadpool.importThreads.$model = provisionDService.importThreads;
-      validationVar.value.threadpool.scanThreads.$model = provisionDService.scanThreads;
-      validationVar.value.threadpool.rescanThreads.$model = provisionDService.rescanThreads;
-      validationVar.value.threadpool.writeThreads.$model = provisionDService.writeThreads;
+      validationVar.value.threadpool.importThreads.$model = provisionDService.importThreads
+      validationVar.value.threadpool.scanThreads.$model = provisionDService.scanThreads
+      validationVar.value.threadpool.rescanThreads.$model = provisionDService.rescanThreads
+      validationVar.value.threadpool.writeThreads.$model = provisionDService.writeThreads
     }
   } catch {
-    console.error("Error in API");
+    console.error("Error in API")
   }
 })
 

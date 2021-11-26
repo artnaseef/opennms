@@ -189,7 +189,7 @@ public class KarafExtender {
             m_installThread = new Thread(() -> {
                 try {
                     LOG.info("Installing features: {}", featuresToInstall);
-                    m_featuresService.installFeatures(featuresToInstall, EnumSet.noneOf(Option.class));
+                    m_featuresService.installFeatures(featuresToInstall, EnumSet.of(Option.NoAutoRefreshBundles, Option.NoAutoRefreshManagedBundles, Option.NoAutoRefreshUnmanagedBundles));
                 } catch (Exception e) {
                     LOG.error("Failed to install one or more features.", e);
                 }

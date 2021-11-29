@@ -31,8 +31,10 @@ package org.opennms.netmgt.dao.mock;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.opennms.netmgt.dao.api.AbstractInterfaceToNodeCache;
 
@@ -53,12 +55,21 @@ public class MockInterfaceToNodeCache extends AbstractInterfaceToNodeCache {
     }
 
     @Override
-    public Iterable<Integer> getNodeId(String location, InetAddress ipAddr) {
+    public List<Integer> getNodeId(String location, InetAddress ipAddr) {
         final Integer nodeId = keyToNodeId.get(new Key(location, ipAddr));
         if (nodeId != null) {
             return Arrays.asList(nodeId);
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Optional<Integer> getFirstNodeId(String location, InetAddress ipAddr) {
+        final Integer nodeId = keyToNodeId.get(new Key(location, ipAddr));
+        if (nodeId != null) {
+            return Optional.of(nodeId);
+        }
+        return Optional.empty();
     }
 
     @Override

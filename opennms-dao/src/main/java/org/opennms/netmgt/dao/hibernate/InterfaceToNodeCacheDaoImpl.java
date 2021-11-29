@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
@@ -62,7 +63,6 @@ import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SortedSetMultimap;
@@ -307,15 +307,33 @@ public class InterfaceToNodeCacheDaoImpl extends AbstractInterfaceToNodeCache im
      * @return The node ID of the IP Address if known.
      */
     @Override
-    public synchronized Iterable<Integer> getNodeId(final String location, final InetAddress address) {
+    public synchronized List<Integer> getNodeId(final String location, final InetAddress address) {
         if (address == null) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
 
         m_lock.readLock().lock();
         try {
-            return Iterables.transform(m_managedAddresses.get(new Key(location, address)),
-                    Value::getNodeId);
+            final var values = m_managedAddresses.get(new Key(location, address));
+            if (values.isEmpty()) {
+                return Collections.emptyList();
+            } else {
+                return values.stream().map(Value::getNodeId).collect(Collectors.toList());
+            }
+        } finally {
+            m_lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public synchronized Optional<Integer> getFirstNodeId(String location, InetAddress ipAddr) {
+        if (ipAddr == null) {
+            return Optional.empty();
+        }
+        m_lock.readLock().lock();
+        try {
+            var s = m_managedAddresses.get(new Key(location, ipAddr));
+            return s.isEmpty() ? Optional.empty() : Optional.of(s.first().nodeId);
         } finally {
             m_lock.readLock().unlock();
         }

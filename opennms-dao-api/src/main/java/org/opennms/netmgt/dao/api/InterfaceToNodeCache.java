@@ -29,13 +29,14 @@
 package org.opennms.netmgt.dao.api;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Optional;
 
 public interface InterfaceToNodeCache {
 
 	void dataSourceSync();
 
-	Iterable<Integer> getNodeId(String location, InetAddress ipAddr);
+	List<Integer> getNodeId(String location, InetAddress ipAddr);
 
 	boolean setNodeId(String location, InetAddress ipAddr, int nodeId);
 

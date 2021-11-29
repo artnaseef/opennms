@@ -32,7 +32,6 @@ import java.net.InetAddress;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.opennms.integration.api.v1.dao.InterfaceToNodeCache;
 
@@ -46,12 +45,12 @@ public class InterfaceToNodeCacheImpl implements InterfaceToNodeCache {
 
     @Override
     public Stream<Integer> getNodeIds(String location, InetAddress ipAddr) {
-        return StreamSupport.stream(cache.getNodeId(location, ipAddr).spliterator(), false);
+        return cache.getNodeId(location, ipAddr).stream();
     }
 
     @Override
     public Optional<Integer> getFirstNodeId(String location, InetAddress ipAddr) {
-        return getNodeIds(location, ipAddr).findFirst();
+        return cache.getFirstNodeId(location, ipAddr);
     }
 
     @Override

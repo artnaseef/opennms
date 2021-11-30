@@ -63,7 +63,7 @@ public class Activator implements BundleActivator {
         registration = context.registerService(PersistenceManager.class, persistenceManager, config);
 
         final ConfigurationAdmin configurationAdmin = findService(context, ConfigurationAdmin.class);
-        primeConfigurationAdmin(configurationAdmin, persistenceManager);
+        // primeConfigurationAdmin(configurationAdmin, persistenceManager);
         registerCallbacks(context, cm, persistenceManager);
 
         logInfo("{0} started.", CmPersistenceManager.class.getSimpleName());

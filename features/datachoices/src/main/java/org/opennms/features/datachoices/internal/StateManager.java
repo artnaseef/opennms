@@ -74,7 +74,7 @@ public class StateManager {
 
     public StateManager(ConfigurationManagerService cm) {
         configKey = new ConfigKey(PROPERTIES_CONFIG_NAME, "default");
-        this.m_propertiesCache = new PropertiesCacheWithCm(cm);
+        m_propertiesCache = new PropertiesCacheWithCm(cm);
     }
 
     public Boolean isEnabled() throws IOException {

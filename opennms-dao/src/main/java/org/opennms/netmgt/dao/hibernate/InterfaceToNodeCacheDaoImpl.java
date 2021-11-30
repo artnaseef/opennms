@@ -332,8 +332,8 @@ public class InterfaceToNodeCacheDaoImpl extends AbstractInterfaceToNodeCache im
         }
         m_lock.readLock().lock();
         try {
-            var s = m_managedAddresses.get(new Key(location, ipAddr));
-            return s.isEmpty() ? Optional.empty() : Optional.of(s.first().nodeId);
+            var values = m_managedAddresses.get(new Key(location, ipAddr));
+            return values.isEmpty() ? Optional.empty() : Optional.of(values.first().nodeId);
         } finally {
             m_lock.readLock().unlock();
         }

@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
@@ -307,18 +308,18 @@ public class InterfaceToNodeCacheDaoImpl extends AbstractInterfaceToNodeCache im
      * @return The node ID of the IP Address if known.
      */
     @Override
-    public synchronized List<Integer> getNodeId(final String location, final InetAddress address) {
+    public Set<Integer> getNodeId(final String location, final InetAddress address) {
         if (address == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
 
         m_lock.readLock().lock();
         try {
             final var values = m_managedAddresses.get(new Key(location, address));
             if (values.isEmpty()) {
-                return Collections.emptyList();
+                return Collections.emptySet();
             } else {
-                return values.stream().map(Value::getNodeId).collect(Collectors.toList());
+                return values.stream().map(Value::getNodeId).collect(Collectors.toSet());
             }
         } finally {
             m_lock.readLock().unlock();
@@ -326,7 +327,7 @@ public class InterfaceToNodeCacheDaoImpl extends AbstractInterfaceToNodeCache im
     }
 
     @Override
-    public synchronized Optional<Integer> getFirstNodeId(String location, InetAddress ipAddr) {
+    public Optional<Integer> getFirstNodeId(String location, InetAddress ipAddr) {
         if (ipAddr == null) {
             return Optional.empty();
         }

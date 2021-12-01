@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.opennms.netmgt.dao.api.AbstractInterfaceToNodeCache;
 
@@ -55,12 +56,12 @@ public class MockInterfaceToNodeCache extends AbstractInterfaceToNodeCache {
     }
 
     @Override
-    public List<Integer> getNodeId(String location, InetAddress ipAddr) {
+    public Set<Integer> getNodeId(String location, InetAddress ipAddr) {
         final Integer nodeId = keyToNodeId.get(new Key(location, ipAddr));
         if (nodeId != null) {
-            return Arrays.asList(nodeId);
+            return Collections.singleton(nodeId);
         }
-        return Collections.emptyList();
+        return Collections.emptySet();
     }
 
     @Override

@@ -31,12 +31,15 @@ package org.opennms.netmgt.flows.elastic;
 import static com.jayway.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.opennms.core.utils.InetAddressUtils.addr;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +104,7 @@ import io.searchbox.client.JestClient;
         "classpath:/META-INF/opennms/applicationContext-rpc-utils.xml",
 })
 @JUnitConfigurationEnvironment
-@JUnitTemporaryDatabase(reuseDatabase = false, tempDbClass = MockDatabase.class)
+@JUnitTemporaryDatabase(reuseDatabase = false)
 public class ThresholdingIT {
     @Rule
     public final ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
@@ -130,41 +133,22 @@ public class ThresholdingIT {
     @Autowired
     private ApplicationContext applicationContext;
 
+    private JestClient restClient;
+    private FlowThresholding thresholding;
+    private FlowRepository flowRepository;
+
     @Before
-    public void before() {
+    public void before() throws Exception {
         this.applicationContext.getAutowireCapableBeanFactory().createBean(DefaultResourceTypeMapper.class);
 
         BeanUtils.assertAutowiring(this);
 
         this.databasePopulator.populateDatabase();
         this.interfaceToNodeCache.dataSourceSync();
-    }
 
-    private List<Flow> createMockedFlows(final int count) {
-        final var now = System.currentTimeMillis();
+        final RestClientFactory restClientFactory = new RestClientFactory(this.elasticSearchRule.getUrl());
+        this.restClient = restClientFactory.createClient();
 
-        final List<Flow> flows = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            final FlowDocument flowDocument = new FlowDocument();
-            flowDocument.setTimestamp(now + i * 1000L);
-            flowDocument.setIpProtocolVersion(4);
-            flowDocument.setInputSnmp(10);
-            flowDocument.setOutputSnmp(20);
-            flowDocument.setSrcAddr(String.format("192.168.%d.%d", i % 256, 255 - (i % 256)));
-            flowDocument.setDstAddr(String.format("192.168.%d.%d", 255 - (i % 256), i % 256));
-            flowDocument.setSrcPort(1);
-            flowDocument.setDstPort(2);
-            flowDocument.setProtocol(6);
-            flowDocument.setBytes(1024L * (count - i));
-            flowDocument.setDirection(Direction.INGRESS);
-
-            final TestFlow flow = new TestFlow(flowDocument);
-            flows.add(flow);
-        }
-        return flows;
-    }
-
-    private FlowRepository createFlowRepository(final JestClient jestClient) throws InterruptedException {
         this.thresholdingDao.overrideConfig(getClass().getResourceAsStream("/thresholds.xml"));
         this.threshdDao.overrideConfig(getClass().getResourceAsStream("/threshd-configuration.xml"));
 
@@ -202,19 +186,17 @@ public class ThresholdingIT {
         collectionAgentFactory.setIpInterfaceDao(this.databasePopulator.getIpInterfaceDao());
         collectionAgentFactory.setPlatformTransactionManager(this.transactionTemplate.getTransactionManager());
 
-        final var sessionCacheConfig = new CacheConfigBuilder()
-                .withName("flow-thresholding-sessions")
-                .build();
-        final var thresholding = new FlowThresholding(this.thresholdingService,
-                                                      collectionAgentFactory,
-                                                      this.databasePopulator.getIpInterfaceDao(),
-                                                      sessionCacheConfig);
+        this.thresholdingService.getThresholdingSetPersister().reinitializeThresholdingSets();
 
-        thresholding.setStepSizeMs(1000);
+        this.thresholding = new FlowThresholding(this.thresholdingService,
+                                                 collectionAgentFactory,
+                                                 this.databasePopulator.getIpInterfaceDao());
+
+        this.thresholding.setStepSizeMs(1000);
 
         final var elasticFlowRepository = new ElasticFlowRepository(
                 metricRegistry,
-                jestClient,
+                this.restClient,
                 IndexStrategy.MONTHLY,
                 documentEnricher,
                 sessionUtils,
@@ -224,66 +206,116 @@ public class ThresholdingIT {
                 tracerRegistry,
                 enrichedFlowForwarder,
                 indexSettings,
-                thresholding);
+                this.thresholding);
 
-        return new InitializingFlowRepository(elasticFlowRepository, jestClient);
+        this.flowRepository = new InitializingFlowRepository(elasticFlowRepository, this.restClient);
+    }
+
+    @After
+    public void after() throws Exception {
+        this.thresholding.close();
+        this.thresholding = null;
+
+        this.flowRepository = null;
+
+        this.restClient.close();
+    }
+
+    private List<Flow> createMockedFlows(final int count) {
+        final var now = System.currentTimeMillis();
+
+        final List<Flow> flows = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            final FlowDocument flowDocument = new FlowDocument();
+            flowDocument.setTimestamp(now + i * 1000L);
+            flowDocument.setIpProtocolVersion(4);
+            flowDocument.setInputSnmp(10);
+            flowDocument.setOutputSnmp(20);
+            flowDocument.setSrcAddr(String.format("192.168.%d.%d", i % 256, 255 - (i % 256)));
+            flowDocument.setDstAddr(String.format("192.168.%d.%d", 255 - (i % 256), i % 256));
+            flowDocument.setSrcPort(1);
+            flowDocument.setDstPort(2);
+            flowDocument.setProtocol(6);
+            flowDocument.setBytes(1024L * (count - i));
+            flowDocument.setDirection(Direction.INGRESS);
+
+            final TestFlow flow = new TestFlow(flowDocument);
+            flows.add(flow);
+        }
+        return flows;
     }
 
     @Test
     public void testThresholding() throws Exception {
-        final RestClientFactory restClientFactory = new RestClientFactory(this.elasticSearchRule.getUrl());
+        final var eventAnticipator = this.mockEventIpcManager.getEventAnticipator();
+        eventAnticipator.anticipateEvent(new EventBuilder(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "Test")
+                                                 .setNodeid(1)
+                                                 .setInterface(addr("192.168.1.1"))
+                                                 .setService(FlowThresholding.SERVICE_NAME)
+                                                 .getEvent());
+        eventAnticipator.anticipateEvent(new EventBuilder(EventConstants.HIGH_THRESHOLD_REARM_EVENT_UEI, "Test")
+                                                 .setNodeid(1)
+                                                 .setInterface(addr("192.168.1.1"))
+                                                 .setService(FlowThresholding.SERVICE_NAME)
+                                                 .getEvent());
 
-        try (final JestClient jestClient = restClientFactory.createClient()) {
-            final var eventAnticipator = this.mockEventIpcManager.getEventAnticipator();
-            eventAnticipator.anticipateEvent(new EventBuilder(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "Test")
-                                                     .setNodeid(1)
-                                                     .setInterface(addr("192.168.1.1"))
-                                                     .setService(FlowThresholding.SERVICE_NAME)
-                                                     .getEvent());
-            eventAnticipator.anticipateEvent(new EventBuilder(EventConstants.HIGH_THRESHOLD_REARM_EVENT_UEI, "Test")
-                                                     .setNodeid(1)
-                                                     .setInterface(addr("192.168.1.1"))
-                                                     .setService(FlowThresholding.SERVICE_NAME)
-                                                     .getEvent());
+        final var source = new FlowSource(this.databasePopulator.getNode1().getLocation().getLocationName(),
+                                          InetAddressUtils.str(this.databasePopulator.getNode1().getPrimaryInterface().getIpAddress()),
+                                          null);
 
-            final var flowRepository = createFlowRepository(jestClient);
+        assertEquals(0, eventAnticipator.getUnanticipatedEvents().size());
 
-            final var source = new FlowSource(this.databasePopulator.getNode1().getLocation().getLocationName(),
-                                              InetAddressUtils.str(this.databasePopulator.getNode1().getPrimaryInterface().getIpAddress()),
-                                              null);
-
-            assertEquals(0, eventAnticipator.getUnanticipatedEvents().size());
-
-            // Sending just one flow, so that counters are initialized before starting the run
-            this.transactionTemplate.execute((tx) -> {
-                try {
-                    flowRepository.persist(createMockedFlows(1), source);
-                } catch (FlowException e) {
-                    throw new RuntimeException(e);
-                }
-                return null;
-            });
-
-            // Sleep roundabout a second, so that at least one thresholding run has finished
+        // Sending just one flow, so that counters are initialized before starting the run
+        this.transactionTemplate.execute((tx) -> {
             try {
-                Thread.sleep(1200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                this.flowRepository.persist(createMockedFlows(1), source);
+            } catch (FlowException e) {
+                throw new RuntimeException(e);
             }
+            return null;
+        });
 
-            // Now, send the all the flows for triggering the threshold
-            this.transactionTemplate.execute((tx) -> {
-            try {
-                    flowRepository.persist(createMockedFlows(1000), source);
-                } catch (FlowException e) {
-                    throw new RuntimeException(e);
-                }
-                return null;
-            });
-
-            await().atMost(60, TimeUnit.SECONDS).until(eventAnticipator::getAnticipatedEvents, hasSize(0));
-
-            eventAnticipator.verifyAnticipated();
+        // Sleep roundabout a second, so that at least one thresholding run has finished
+        try {
+            Thread.sleep(1200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        // Now, send the all the flows for triggering the threshold
+        this.transactionTemplate.execute((tx) -> {
+            try {
+                this.flowRepository.persist(createMockedFlows(1000), source);
+            } catch (FlowException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+
+        await().atMost(60, TimeUnit.SECONDS).until(eventAnticipator::getAnticipatedEvents, hasSize(0));
+
+        eventAnticipator.verifyAnticipated();
+    }
+
+    @Test
+    public void testHousekeeping() throws Exception {
+        this.thresholding.setIdleTimeoutMs(2000);
+
+        final var source = new FlowSource(this.databasePopulator.getNode1().getLocation().getLocationName(),
+                                          InetAddressUtils.str(this.databasePopulator.getNode1().getPrimaryInterface().getIpAddress()),
+                                          null);
+
+        this.transactionTemplate.execute((tx) -> {
+            try {
+                this.flowRepository.persist(createMockedFlows(1), source);
+            } catch (FlowException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+
+        assertThat(this.thresholding.getSessions(), hasSize(1));
+
+        await().atMost(60, TimeUnit.SECONDS).until(this.thresholding::getSessions, hasSize(0));
     }
 }
